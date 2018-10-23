@@ -1,16 +1,14 @@
+# purple backend
 
-Setup
------
+Related repositories
 
-* [Ideas](./doc/ideas.md)
+* [frontend](https://github.com/Clindbergh/thingy-frontend-purple)
+* [doc](https://github.com/Clindbergh/thingy-doc-purple)
+* [shared code with the frontend](https://github.com/Clindbergh/thingy-api-purple)
 
+## Getting Started
 
-Links
------
-* [Webstorm (with the useful toolbox)](https://www.jetbrains.com/toolbox/app/?fromMenu)
-* [How we might use git](http://nvie.com/posts/a-successful-git-branching-model/)
-
-Documentation
------
-* [Technical Documentation](./doc/Technical-Documentation.md)
-* [Functional Documentation](./doc/Functional-Documentation.md)
+```
+npm i
+npm run watch-server
+```
