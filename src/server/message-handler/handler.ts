@@ -1,8 +1,8 @@
 import {mqttBrokerClient} from '../mqtt-broker-connection/index';
-import {storeTemperature} from '../enviromental-data/temperature/index';
-import {storePressure} from '../enviromental-data/pressure/index';
-import {storeHumidity} from '../enviromental-data/humidity';
-import {storeAirQuality} from '../enviromental-data/air-quality';
+import {TemperatureHandler} from '../enviromental-data/temperature/index';
+import {PressureHandler} from '../enviromental-data/pressure/index';
+import {HumidityHandler} from '../enviromental-data/humidity';
+import {AirQualityHandler} from '../enviromental-data/air-quality';
 import {ThingyDevicesHandler} from '../thingy-devices/handler';
 
 const temperatureCharacteristic = '/ef680200-9b35-4933-9b10-52ffa9740042/ef680201-9b35-4933-9b10-52ffa9740042';
@@ -54,20 +54,28 @@ const subscribe = async (client: any, init: boolean, deviceId?: string) => {
 };
 
 const handleMessages = (client: any) => {
-    client.on('message', (topic: string, message: any) => {
+    client.on('message', async (topic: string, message: any) => {
         if (topic.endsWith(temperatureCharacteristic)) {
-            storeTemperature(message);
+            const temperatureHandler: TemperatureHandler = new TemperatureHandler();
+            await temperatureHandler.storeTemperature(message, extractDeviceId(topic));
         }
         if (topic.endsWith(pressureCharacteristic)) {
-            storePressure(message);
+            const pressureHandler: PressureHandler = new PressureHandler();
+            await pressureHandler.storePressure(message, extractDeviceId(topic));
         }
         if (topic.endsWith(humidityCharacteristic)) {
-            storeHumidity(message);
+            const humidityHandler: HumidityHandler = new HumidityHandler();
+            await humidityHandler.storeHumidity(message, extractDeviceId(topic));
         }
         if (topic.endsWith(airQualityCharacteristic)) {
-            storeAirQuality(message);
+            const airQualityHandler: AirQualityHandler = new AirQualityHandler();
+            await airQualityHandler.storeAirQuality(message, extractDeviceId(topic));
         }
     });
+};
+
+const extractDeviceId = (topic: string) => {
+    return topic.split('/')[0];
 };
 
 export {initSubscriptionToMqtt, subscribeToMqtt};

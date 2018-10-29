@@ -78,6 +78,10 @@ export class ThingyDevicesHandler {
         }
     }
 
+    public async findThingyByDeviceId(deviceId: string) {
+        return await Thingy.find({deviceId: deviceId});
+    }
+
     private async findThingByUsernameAndLocation(username: string, location: string) {
         const thingy = await Thingy.findOne({
             username: username,

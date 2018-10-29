@@ -3,7 +3,7 @@ import {readConfigFromFile} from '../util';
 import {BrokerConnection} from './model';
 
 /**
- * Constructs the client to connect to our MQTT message broker.
+ * Constructs the client to connectToMongoDB to our MQTT message broker.
  */
 const mqttBrokerClient = () => {
     const host = readConfigFromFile('mqtt', '../mqtt-broker-credentials');

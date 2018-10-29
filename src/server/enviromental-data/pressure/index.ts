@@ -1,1 +1,1 @@
-export {storePressure} from './handler';
+export {PressureHandler} from './handler';

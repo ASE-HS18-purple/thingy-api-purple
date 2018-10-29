@@ -8,7 +8,7 @@ import {initSubscriptionToMqtt} from '../message-handler';
 import {routes} from '../routing';
 import {readConfigFromFile} from '../util';
 
-import {connect as connectToMongoDb} from '../database';
+import {connectToMongoDB, influxDatabaseClient, initInfluxDatabase} from '../database';
 
 const start = async () => {
     const port = readConfigFromFile('SERVER_PORT', '../server-configs');
@@ -21,7 +21,8 @@ const start = async () => {
     await app.listen(port);
     console.log(`App is up and running and listening to port: ${port}`);
     console.log('Initiating database connection');
-    await connectToMongoDb();
+    await connectToMongoDB();
+    await initInfluxDatabase();
     mqttBrokerConnection.initConnection();
     initSubscriptionToMqtt();
 };

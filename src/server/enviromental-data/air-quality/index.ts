@@ -1,1 +1,1 @@
-export {storeAirQuality} from './handler';
+export {AirQualityHandler} from './handler';

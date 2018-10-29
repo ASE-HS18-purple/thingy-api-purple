@@ -1,1 +1,1 @@
-export {storeHumidity} from './handler';
+export {HumidityHandler} from './handler';
