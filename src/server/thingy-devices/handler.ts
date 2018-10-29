@@ -57,6 +57,18 @@ export class ThingyDevicesHandler {
         }
     }
 
+    public async deleteThingyDevice(id: string, username: string) {
+        //const thingDevice =
+        const thingyDevice = await Thingy.findById(id);
+        if (thingyDevice) {
+            if ((thingyDevice as any).username == username) {
+                await Thingy.deleteOne({_id: id});
+                return true;
+            }
+        }
+        return false;
+    }
+
     private async findThingByUsernameAndLocation(username: string, location: string) {
         const thingy = await Thingy.findOne({
             username: username,
