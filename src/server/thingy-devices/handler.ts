@@ -69,6 +69,15 @@ export class ThingyDevicesHandler {
         return false;
     }
 
+    public async findThingyById(id: string, username: string) {
+        const thingDevice = await Thingy.findOne({_id: id});
+        if (thingDevice) {
+            if ((thingDevice as any).username == username) {
+                return thingDevice;
+            }
+        }
+    }
+
     private async findThingByUsernameAndLocation(username: string, location: string) {
         const thingy = await Thingy.findOne({
             username: username,
