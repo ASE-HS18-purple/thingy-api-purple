@@ -42,6 +42,21 @@ export class ThingyDevicesHandler {
         return await Thingy.find({});
     }
 
+    public async updateThingyDeviceByLocationId(id: string, deviceId: any, username: string) {
+        // Try to search by the location id coming from client.
+        const thingyDevice = await Thingy.findById(id);
+        if (thingyDevice) {
+            // If the device is found, check if it belongs to the user who did the request.
+            if ((thingyDevice as any).username == username) {
+                await Thingy.updateOne({_id: id}, {
+                    deviceId: deviceId
+                });
+                subscribeToMqtt(deviceId);
+                return await Thingy.findById(id);
+            }
+        }
+    }
+
     private async findThingByUsernameAndLocation(username: string, location: string) {
         const thingy = await Thingy.findOne({
             username: username,
