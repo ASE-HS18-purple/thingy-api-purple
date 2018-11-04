@@ -33,7 +33,7 @@ class App {
     private mqttConnection: MqttConnection;
     private databaseConnection: DatabaseConnection;
 
-    constructor(authenticationService: AuthenticationService) {
+    constructor() {
         this.controllers = [];
     }
 
