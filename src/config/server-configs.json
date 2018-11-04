@@ -1,0 +1,4 @@
+{
+  "SERVER_PORT": 3000,
+  "PUBLIC_APIS": ["/authenticate","/users/username/","/users/email/","/users/signup"]
+}

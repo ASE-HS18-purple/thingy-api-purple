@@ -1,1 +1,0 @@
-export {storeHumidity} from './handler';

@@ -1,3 +1,4 @@
-import {start} from './server/app/index';
+import {App} from './app';
 
-start();
+let app = new App();
+app.start();
