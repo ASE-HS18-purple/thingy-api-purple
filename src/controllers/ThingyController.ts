@@ -3,17 +3,20 @@ import * as Router from 'koa-router';
 import {ThingyQueryService} from '../service/database/ThingyQueryService';
 import {ThingyService} from '../service/ThingyService';
 import {IThingy} from '../models/Thingy';
+import {MqttService} from '../service/MqttService';
 
 export class ThingyController extends BaseController {
 
     private thingyQuerier: ThingyQueryService;
     private thingyService: ThingyService;
+    private mqttService: MqttService;
     protected zone: string = '/thingy';
 
-    constructor(thingyQuerier: ThingyQueryService, thingyService: ThingyService) {
+    constructor(thingyQuerier: ThingyQueryService, thingyService: ThingyService, mqttService: MqttService) {
         super();
         this.thingyQuerier = thingyQuerier;
         this.thingyService = thingyService;
+        this.mqttService = mqttService;
     }
 
     getRoutes(router: Router): Router {
@@ -30,6 +33,7 @@ export class ThingyController extends BaseController {
         const username = ctx.state.user.user.username;
         ctx.response.body = await this.thingyService.configureNewThingyDevice(thingyModel, username);
         ctx.response.status = 200;
+        this.mqttService.subscribe(thingyModel.deviceId)
     };
 
     getAllThingys = async (ctx: Router.IRouterContext) => {
@@ -45,6 +49,7 @@ export class ThingyController extends BaseController {
         const updatedThingyDeviceHandler = await this.thingyQuerier.updateThingyDeviceByLocationId(locationId, thingyDevice.deviceId, username);
         ctx.response.body = updatedThingyDeviceHandler;
         ctx.response.status = updatedThingyDeviceHandler ? 200 : 400;
+        this.mqttService.subscribe(thingyDevice.deviceId)
     };
 
     deleteThingy = async (ctx: Router.IRouterContext) => {

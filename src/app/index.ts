@@ -69,6 +69,7 @@ class App {
         this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataParserService);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
         this.mqttConnection.initConnection();
+        this.mqttService.initSubscriptionToMqtt();
         this.databaseConnection.connect();
     };
 
@@ -76,7 +77,7 @@ class App {
         this.controllers.push(
             new AuthenticationController(this.userQueryService, this.config.authConfig.SECRET_KEY),
             new MqttController(this.mqttConnection),
-            new ThingyController(this.thingyQueryService, this.thingyService),
+            new ThingyController(this.thingyQueryService, this.thingyService, this.mqttService),
             new UserController(this.userQueryService)
         );
         let router: Router = new Router();

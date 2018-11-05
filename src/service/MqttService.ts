@@ -26,7 +26,6 @@ export class MqttService {
             let deviceIds: string[] = devices.map(thingy => thingy.deviceId);
             this.subscribeMany(deviceIds);
         }
-        this.setEventHandlers();
     };
 
     public subscribeMany = async (deviceIds: string[]) => {
@@ -44,6 +43,7 @@ export class MqttService {
         this.mqttConnection.client.subscribe(pressureTopic);
         this.mqttConnection.client.subscribe(humidityTopic);
         this.mqttConnection.client.subscribe(airQualityTopic);
+        this.setEventHandlers();
     }
 
     private setEventHandlers = () => {
