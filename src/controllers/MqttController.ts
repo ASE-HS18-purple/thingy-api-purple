@@ -4,7 +4,7 @@ import {MqttConnection} from '../service/MqttConnection';
 
 export class MqttController extends BaseController {
 
-    protected zone: string = '/mqttConfig';
+    protected zone: string = '/mqtt';
     private mqttConnection: MqttConnection;
 
     constructor(mqttConnection: MqttConnection) {
@@ -17,8 +17,8 @@ export class MqttController extends BaseController {
         return router;
     }
 
-    getState = async (ctx: Router.IRouterContext) => {
-        ctx.response.body = await this.mqttConnection.connectionState;
+    getState = (ctx: Router.IRouterContext) => {
+        ctx.response.body = { state: this.mqttConnection.connectionState };
         ctx.status = 200;
     };
 }
