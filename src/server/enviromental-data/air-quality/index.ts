@@ -1,1 +1,0 @@
-export {storeAirQuality} from './handler';
