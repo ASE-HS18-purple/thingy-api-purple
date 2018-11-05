@@ -60,6 +60,8 @@ class App {
     private initializeServices = () => {
         let mqttConfig = this.config.mqttConfig;
         let dbConfig = this.config.dbConfig;
+        this.thingyQueryService = new ThingyQueryService();
+        this.userQueryService = new UserQueryService();
         this.mqttConnection = new MqttConnection(mqttConfig.mqtt, mqttConfig.port, mqttConfig.username, mqttConfig.password);
         this.databaseConnection = new DatabaseConnection(dbConfig.DATABASE_URL, dbConfig.DATABASE_NAME);
         this.authenticationService = new AuthenticationService(this.config.serverConfig.PUBLIC_APIS);
@@ -67,16 +69,15 @@ class App {
         this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataParserService);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
         this.mqttConnection.initConnection();
+        this.mqttService.initSubscriptionToMqtt();
         this.databaseConnection.connect();
-        this.thingyQueryService = new ThingyQueryService();
-        this.userQueryService = new UserQueryService();
     };
 
     private initializeControllers = (): Router => {
         this.controllers.push(
             new AuthenticationController(this.userQueryService, this.config.authConfig.SECRET_KEY),
             new MqttController(this.mqttConnection),
-            new ThingyController(this.thingyQueryService, this.thingyService),
+            new ThingyController(this.thingyQueryService, this.thingyService, this.mqttService),
             new UserController(this.userQueryService)
         );
         let router: Router = new Router();
