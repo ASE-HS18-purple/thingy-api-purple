@@ -33,7 +33,6 @@ export class ThingyController extends BaseController {
         const username = ctx.state.user.user.username;
         ctx.response.body = await this.thingyService.configureNewThingyDevice(thingyModel, username);
         ctx.response.status = 200;
-        this.mqttService.subscribe(thingyModel.deviceId)
     };
 
     getAllThingys = async (ctx: Router.IRouterContext) => {
