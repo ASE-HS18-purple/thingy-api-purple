@@ -30,6 +30,8 @@
     "koa-router": "7.2.1",
     "mongoose": "5.3.1",
     "mqtt": "^2.18.8",
-    "ws": "^6.1.0"
+    "strongly-typed-events": "^1.4.6",
+    "ws": "^6.1.0",
+    "thingy52": "^1.0.4"
   }
 }

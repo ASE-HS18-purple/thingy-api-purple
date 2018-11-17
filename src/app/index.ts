@@ -18,6 +18,7 @@ import {Configuration} from '../service/ConfigurationService';
 import {ThingyService} from '../service/ThingyService';
 import {MqttService} from '../service/MqttService';
 import {EnvironmentalDataParserService} from '../service/EnvironmentalDataParserService';
+import {EventBus} from '../service/EventBus';
 
 
 class App {
@@ -32,6 +33,7 @@ class App {
     private config: Configuration.Loader;
     private mqttConnection: MqttConnection;
     private databaseConnection: DatabaseConnection;
+    private eventBus: EventBus;
 
     constructor() {
         this.controllers = [];
@@ -64,7 +66,8 @@ class App {
         this.databaseConnection = new DatabaseConnection(dbConfig.DATABASE_URL, dbConfig.DATABASE_NAME);
         this.authenticationService = new AuthenticationService(this.config.serverConfig.PUBLIC_APIS);
         this.environmentalDataParserService = new EnvironmentalDataParserService();
-        this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataParserService);
+        this.eventBus = new EventBus();
+        this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataParserService, this.eventBus);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
         this.mqttConnection.initConnection();
         this.databaseConnection.connect();

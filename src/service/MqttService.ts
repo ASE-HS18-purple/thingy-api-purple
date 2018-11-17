@@ -3,6 +3,8 @@ import {IThingy} from '../models/Thingy';
 import {EnvironmentalDataParserService} from './EnvironmentalDataParserService';
 import {ThingyService} from './ThingyService';
 import {ThingyQueryService} from './database/ThingyQueryService';
+import {EventBus} from './EventBus';
+
 
 export class MqttService {
 
@@ -10,14 +12,16 @@ export class MqttService {
     private static pressureCharacteristic = '/ef680200-9b35-4933-9b10-52ffa9740042/ef680202-9b35-4933-9b10-52ffa9740042';
     private static humidityCharacteristic = '/ef680200-9b35-4933-9b10-52ffa9740042/ef680203-9b35-4933-9b10-52ffa9740042';
     private static airQualityCharacteristic = '/ef680200-9b35-4933-9b10-52ffa9740042/ef680204-9b35-4933-9b10-52ffa9740042';
-    mqttConnection: MqttConnection;
+    private mqttConnection: MqttConnection;
     private environementalDataParser: EnvironmentalDataParserService;
     private thingyQuerier: ThingyQueryService;
+    private eventBus: EventBus;
 
-    constructor(mqttBrokerClient: MqttConnection, thingyQuerier: ThingyQueryService, environmentalDataParser: EnvironmentalDataParserService) {
+    constructor(mqttBrokerClient: MqttConnection, thingyQuerier: ThingyQueryService, environmentalDataParser: EnvironmentalDataParserService, eventBus: EventBus) {
         this.mqttConnection = mqttBrokerClient;
         this.environementalDataParser = environmentalDataParser;
         this.thingyQuerier = thingyQuerier;
+        this.eventBus = eventBus;
     }
 
     public initSubscriptionToMqtt = async () => {
@@ -48,6 +52,7 @@ export class MqttService {
 
     private setEventHandlers = () => {
         this.mqttConnection.client.on('message', (topic: string, message: any) => {
+            this.eventBus.
             if (topic.endsWith(MqttService.temperatureCharacteristic)) {
                 this.environementalDataParser.parseTemperature(message);
             }
