@@ -1,4 +1,5 @@
 import {InfluxDatabaseConnection} from './InfluxDatabaseConnection';
+import {IQueryOptions, IResults} from 'influx';
 
 export class EnvironmentalDataQueryService {
 
@@ -37,4 +38,40 @@ export class EnvironmentalDataQueryService {
         }]);
     }
 
+    public async getTemperatureData(from: number, to: number, configId: string) {
+        return await this.queryEnvData(from, to, configId, 'temperature');
+    }
+
+    public async getPressureData(from: number, to: number, configId: string) {
+        return await this.queryEnvData(from, to, configId, 'pressure');
+    }
+
+    public async getHumidityData(from: number, to: number, configId: string) {
+        return await this.queryEnvData(from, to, configId, 'humidity');
+    }
+
+    public async getAirQualityData(from: number, to: number, configId: string) {
+        return await this.queryEnvData(from, to, configId, 'co2');
+    }
+
+
+    private async queryEnvData(from: number, to: number, configId: string, measurement: string) {
+        const fromDate = new Date(new Number(from)).toISOString();
+        const toDate = new Date(new Number(to)).toISOString();
+        const query = ` SELECT time, value FROM ${measurement} WHERE configId = '${configId}' AND time > '${fromDate}' AND time < '${toDate}'`;
+        const data = this.influxDatabase.getInFluxDbClient().query(query);
+        return data;
+    }
+}
+
+export class EnvironmentalData {
+    unit: string;
+    datasets: {
+        id: string,
+        thingyName: string,
+        properties: {
+            value: number,
+            time: string;
+        }[]
+    }[];
 }
