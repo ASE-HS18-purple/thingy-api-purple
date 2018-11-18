@@ -20,6 +20,7 @@ import {MqttService} from '../service/MqttService';
 import {EnvironmentalDataParserService} from '../service/EnvironmentalDataParserService';
 import {InfluxDatabaseConnection} from '../service/database/InfluxDatabaseConnection';
 import {EnvironmentalDataQueryService} from '../service/database/EnvironmentalDataQueryService';
+import {EnvironmentalDataController} from '../controllers/EnvironmentalDataController';
 
 
 class App {
@@ -86,8 +87,8 @@ class App {
             new AuthenticationController(this.userQueryService, this.config.authConfig.SECRET_KEY),
             new MqttController(this.mqttConnection),
             new ThingyController(this.thingyQueryService, this.thingyService, this.mqttService),
-            new UserController(this.userQueryService)
-        );
+            new UserController(this.userQueryService),
+            new EnvironmentalDataController(this.environmentalDataQueryService, this.thingyQueryService));
         let router: Router = new Router();
         for (let controller of this.controllers) {
             controller.routes(router);

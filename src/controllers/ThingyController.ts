@@ -48,7 +48,7 @@ export class ThingyController extends BaseController {
         const updatedThingyDeviceHandler = await this.thingyQuerier.updateThingyDeviceByLocationId(locationId, thingyDevice.deviceId, username);
         ctx.response.body = updatedThingyDeviceHandler;
         ctx.response.status = updatedThingyDeviceHandler ? 200 : 400;
-        this.mqttService.subscribe(thingyDevice.deviceId)
+        this.mqttService.subscribe(thingyDevice.deviceId);
     };
 
     deleteThingy = async (ctx: Router.IRouterContext) => {
