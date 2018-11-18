@@ -3,7 +3,7 @@ import * as bodyParser from 'koa-bodyparser';
 import * as Koa from 'koa';
 import * as Router from 'koa-router';
 
-import {DatabaseConnection} from '../service/database/DatabaseService';
+import {MongoDatabaseConnection} from '../service/database/MongoDatabaseService';
 import {MqttConnection} from '../service/MqttConnection';
 import {AuthenticationService} from '../service/AuthenticationService';
 import {BaseController} from '../controllers/BaseController';
@@ -18,6 +18,7 @@ import {Configuration} from '../service/ConfigurationService';
 import {ThingyService} from '../service/ThingyService';
 import {MqttService} from '../service/MqttService';
 import {EnvironmentalDataParserService} from '../service/EnvironmentalDataParserService';
+import {InfluxDatabaseConnection} from '../service/database/InfluxDatabaseConnection';
 
 
 class App {
@@ -31,7 +32,8 @@ class App {
     private thingyQueryService: ThingyQueryService;
     private config: Configuration.Loader;
     private mqttConnection: MqttConnection;
-    private databaseConnection: DatabaseConnection;
+    private mongoDatabaseConnection: MongoDatabaseConnection;
+    private influxDatabaseConnection: InfluxDatabaseConnection;
 
     constructor() {
         this.controllers = [];
@@ -53,24 +55,27 @@ class App {
     };
 
     private loadConfig = () => {
-        this.config = new Configuration.Loader('../../config');
+        this.config = new Configuration.Loader('../config');
         this.config.load();
     };
 
     private initializeServices = () => {
         let mqttConfig = this.config.mqttConfig;
-        let dbConfig = this.config.dbConfig;
+        let mongoDbConfig = this.config.mongoDatabaseCfg;
+        const influxDbConfig = this.config.influxDatabaseCfg;
         this.thingyQueryService = new ThingyQueryService();
         this.userQueryService = new UserQueryService();
         this.mqttConnection = new MqttConnection(mqttConfig.mqtt, mqttConfig.port, mqttConfig.username, mqttConfig.password);
-        this.databaseConnection = new DatabaseConnection(dbConfig.DATABASE_URL, dbConfig.DATABASE_NAME);
+        this.mongoDatabaseConnection = new MongoDatabaseConnection(mongoDbConfig.DATABASE_URL, mongoDbConfig.DATABASE_NAME);
+        this.influxDatabaseConnection = new InfluxDatabaseConnection(influxDbConfig.DATABASE_URL, influxDbConfig.DATABASE_NAME);
         this.authenticationService = new AuthenticationService(this.config.serverConfig.PUBLIC_APIS);
         this.environmentalDataParserService = new EnvironmentalDataParserService();
         this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataParserService);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
         this.mqttConnection.initConnection();
         this.mqttService.initSubscriptionToMqtt();
-        this.databaseConnection.connect();
+        this.mongoDatabaseConnection.connect();
+        this.influxDatabaseConnection.connect();
     };
 
     private initializeControllers = (): Router => {
