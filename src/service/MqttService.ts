@@ -3,6 +3,7 @@ import {IThingy} from '../models/Thingy';
 import {EnvironmentalDataParserService} from './EnvironmentalDataParserService';
 import {ThingyService} from './ThingyService';
 import {ThingyQueryService} from './database/ThingyQueryService';
+import {EnvironmentalDataQueryService} from './database/EnvironmentalDataQueryService';
 
 export class MqttService {
 
@@ -11,13 +12,15 @@ export class MqttService {
     private static humidityCharacteristic = '/ef680200-9b35-4933-9b10-52ffa9740042/ef680203-9b35-4933-9b10-52ffa9740042';
     private static airQualityCharacteristic = '/ef680200-9b35-4933-9b10-52ffa9740042/ef680204-9b35-4933-9b10-52ffa9740042';
     mqttConnection: MqttConnection;
-    private environementalDataParser: EnvironmentalDataParserService;
+    private environmentalDataParser: EnvironmentalDataParserService;
     private thingyQuerier: ThingyQueryService;
+    private environmentalDataQueryService: EnvironmentalDataQueryService;
 
-    constructor(mqttBrokerClient: MqttConnection, thingyQuerier: ThingyQueryService, environmentalDataParser: EnvironmentalDataParserService) {
+    constructor(mqttBrokerClient: MqttConnection, thingyQuerier: ThingyQueryService, environmentalDataQueryService: EnvironmentalDataQueryService, environmentalDataParser: EnvironmentalDataParserService) {
         this.mqttConnection = mqttBrokerClient;
-        this.environementalDataParser = environmentalDataParser;
+        this.environmentalDataParser = environmentalDataParser;
         this.thingyQuerier = thingyQuerier;
+        this.environmentalDataQueryService = environmentalDataQueryService;
     }
 
     public initSubscriptionToMqtt = async () => {
@@ -46,21 +49,44 @@ export class MqttService {
         this.setEventHandlers();
     }
 
-    private setEventHandlers = () => {
+    private setEventHandlers = async () => {
         this.mqttConnection.client.on('message', (topic: string, message: any) => {
+            let environmentalVal: number;
             if (topic.endsWith(MqttService.temperatureCharacteristic)) {
-                this.environementalDataParser.parseTemperature(message);
+                environmentalVal = this.environmentalDataParser.parseTemperature(message);
             }
             if (topic.endsWith(MqttService.pressureCharacteristic)) {
-                this.environementalDataParser.parsePressure(message);
+                environmentalVal = this.environmentalDataParser.parsePressure(message);
             }
             if (topic.endsWith(MqttService.humidityCharacteristic)) {
-                this.environementalDataParser.parseHumidity(message);
+                environmentalVal = this.environmentalDataParser.parseHumidity(message);
             }
             if (topic.endsWith(MqttService.airQualityCharacteristic)) {
-                this.environementalDataParser.parseAirQuality(message);
+                environmentalVal = this.environmentalDataParser.parseAirQuality(message)[0];
             }
+            this.storeEnvData(topic, environmentalVal);
         });
     };
+
+    private async storeEnvData(topic: string, value: number) {
+        const deviceId = topic.split('/')[0];
+        const thingyDevices = await this.thingyQuerier.findThingyDeviceById(deviceId);
+        if (thingyDevices) {
+            thingyDevices.forEach(async thingyDevice => {
+                if (topic.endsWith(MqttService.temperatureCharacteristic)) {
+                    await this.environmentalDataQueryService.storeTemperature(thingyDevice._id, value);
+                }
+                if (topic.endsWith(MqttService.pressureCharacteristic)) {
+                    await this.environmentalDataQueryService.storePressure(thingyDevice._id, value);
+                }
+                if (topic.endsWith(MqttService.humidityCharacteristic)) {
+                    await this.environmentalDataQueryService.storeHumidity(thingyDevice._id, value);
+                }
+                if (topic.endsWith(MqttService.airQualityCharacteristic)) {
+                    await this.environmentalDataQueryService.storeCO2(thingyDevice._id, value);
+                }
+            });
+        }
+    }
 
 }

@@ -48,7 +48,7 @@ export class ThingyController extends BaseController {
         const updatedThingyDeviceHandler = await this.thingyQuerier.updateThingyDeviceByLocationId(locationId, thingyDevice.deviceId, username);
         ctx.response.body = updatedThingyDeviceHandler;
         ctx.response.status = updatedThingyDeviceHandler ? 200 : 400;
-        this.mqttService.subscribe(thingyDevice.deviceId)
+        this.mqttService.subscribe(thingyDevice.deviceId);
     };
 
     deleteThingy = async (ctx: Router.IRouterContext) => {
@@ -61,7 +61,7 @@ export class ThingyController extends BaseController {
     getThingy = async (ctx: Router.IRouterContext) => {
         const id = ctx.params.id;
         const username = ctx.state.user.user.username;
-        const foundThingyDevice = await this.thingyQuerier.findThingyById(id, username);
+        const foundThingyDevice = await this.thingyQuerier.findThingyByIdAndUsername(id, username);
         ctx.response.body = foundThingyDevice;
         ctx.response.status = foundThingyDevice ? 200 : 404;
     };
