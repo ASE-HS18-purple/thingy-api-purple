@@ -25,20 +25,6 @@ export class EnvironmentalDataQueryService {
         await this.storeEnvData(configId, value, 'co2');
     }
 
-    public async getTemperatureData(from: number, to: number, configId: string) {
-        return await this.queryEnvData(from, to, configId, 'temperature');
-    }
-
-    private async queryEnvData(from: number, to: number, configId: string, measurement: string) {
-        const fromDate = new Date(new Number(from)).toISOString();
-        const toDate = new Date(new Number(to)).toISOString();
-        console.log(fromDate);
-        console.log(toDate);
-        const query = ` SELECT time, value FROM ${measurement} WHERE configId = '${configId}' AND time > '${fromDate}' AND time < '${toDate}'`;
-        const data = this.influxDatabase.getInFluxDbClient().query(query);
-        return data;
-    }
-
     private async storeEnvData(configId: string, value: number, measurement: string) {
         const influxDbClient = this.influxDatabase.getInFluxDbClient();
         await influxDbClient.writePoints([{
@@ -50,6 +36,31 @@ export class EnvironmentalDataQueryService {
                 value: value,
             }
         }]);
+    }
+
+    public async getTemperatureData(from: number, to: number, configId: string) {
+        return await this.queryEnvData(from, to, configId, 'temperature');
+    }
+
+    public async getPressureData(from: number, to: number, configId: string) {
+        return await this.queryEnvData(from, to, configId, 'pressure');
+    }
+
+    public async getHumidityData(from: number, to: number, configId: string) {
+        return await this.queryEnvData(from, to, configId, 'humidity');
+    }
+
+    public async getAirQualityData(from: number, to: number, configId: string) {
+        return await this.queryEnvData(from, to, configId, 'co2');
+    }
+
+
+    private async queryEnvData(from: number, to: number, configId: string, measurement: string) {
+        const fromDate = new Date(new Number(from)).toISOString();
+        const toDate = new Date(new Number(to)).toISOString();
+        const query = ` SELECT time, value FROM ${measurement} WHERE configId = '${configId}' AND time > '${fromDate}' AND time < '${toDate}'`;
+        const data = this.influxDatabase.getInFluxDbClient().query(query);
+        return data;
     }
 }
 

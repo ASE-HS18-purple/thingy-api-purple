@@ -77,13 +77,13 @@ export class MqttService {
                     await this.environmentalDataQueryService.storeTemperature(thingyDevice._id, value);
                 }
                 if (topic.endsWith(MqttService.pressureCharacteristic)) {
-                    this.environmentalDataQueryService.storePressure(thingyDevice._id, value);
+                    await this.environmentalDataQueryService.storePressure(thingyDevice._id, value);
                 }
                 if (topic.endsWith(MqttService.humidityCharacteristic)) {
-                    this.environmentalDataQueryService.storeHumidity(thingyDevice._id, value);
+                    await this.environmentalDataQueryService.storeHumidity(thingyDevice._id, value);
                 }
                 if (topic.endsWith(MqttService.airQualityCharacteristic)) {
-                    this.environmentalDataQueryService.storeCO2(thingyDevice._id, value);
+                    await this.environmentalDataQueryService.storeCO2(thingyDevice._id, value);
                 }
             });
         }
