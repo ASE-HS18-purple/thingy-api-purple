@@ -19,6 +19,7 @@ import {ThingyService} from '../service/ThingyService';
 import {MqttService} from '../service/MqttService';
 import {EnvironmentalDataParserService} from '../service/EnvironmentalDataParserService';
 import {InfluxDatabaseConnection} from '../service/database/InfluxDatabaseConnection';
+import {EnvironmentalDataQueryService} from '../service/database/EnvironmentalDataQueryService';
 
 
 class App {
@@ -30,6 +31,7 @@ class App {
     private thingyService: ThingyService;
     private userQueryService: UserQueryService;
     private thingyQueryService: ThingyQueryService;
+    private environmentalDataQueryService: EnvironmentalDataQueryService;
     private config: Configuration.Loader;
     private mqttConnection: MqttConnection;
     private mongoDatabaseConnection: MongoDatabaseConnection;
@@ -70,7 +72,8 @@ class App {
         this.influxDatabaseConnection = new InfluxDatabaseConnection(influxDbConfig.DATABASE_URL, influxDbConfig.DATABASE_NAME);
         this.authenticationService = new AuthenticationService(this.config.serverConfig.PUBLIC_APIS);
         this.environmentalDataParserService = new EnvironmentalDataParserService();
-        this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataParserService);
+        this.environmentalDataQueryService = new EnvironmentalDataQueryService(this.influxDatabaseConnection);
+        this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataQueryService, this.environmentalDataParserService);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
         this.mqttConnection.initConnection();
         this.mqttService.initSubscriptionToMqtt();

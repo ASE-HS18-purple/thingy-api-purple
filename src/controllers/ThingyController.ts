@@ -61,7 +61,7 @@ export class ThingyController extends BaseController {
     getThingy = async (ctx: Router.IRouterContext) => {
         const id = ctx.params.id;
         const username = ctx.state.user.user.username;
-        const foundThingyDevice = await this.thingyQuerier.findThingyById(id, username);
+        const foundThingyDevice = await this.thingyQuerier.findThingyByIdAndUsername(id, username);
         ctx.response.body = foundThingyDevice;
         ctx.response.status = foundThingyDevice ? 200 : 404;
     };

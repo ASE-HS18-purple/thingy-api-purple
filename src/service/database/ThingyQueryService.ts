@@ -1,4 +1,5 @@
 import {IThingy, Thingy} from '../../models/Thingy';
+import {ThingyService} from '../ThingyService';
 
 
 export class ThingyQueryService {
@@ -48,13 +49,17 @@ export class ThingyQueryService {
     }
 
 
-    public async findThingyById(id: string, username: string) {
+    public async findThingyByIdAndUsername(id: string, username: string) {
         const thingDevice = await Thingy.findOne({_id: id});
         if (thingDevice) {
             if ((thingDevice as any).username == username) {
                 return thingDevice;
             }
         }
+    }
+
+    public async findThingyDeviceById(deviceId: string) {
+        return Thingy.find({deviceId: deviceId});
     }
 
 }
