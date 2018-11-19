@@ -1,7 +1,11 @@
-
 export namespace Configuration {
 
-    interface Database {
+    interface MongoDatabase {
+        DATABASE_URL: string,
+        DATABASE_NAME: string
+    }
+
+    interface InfluxDatabase {
         DATABASE_URL: string,
         DATABASE_NAME: string
     }
@@ -26,7 +30,8 @@ export namespace Configuration {
 
         private path: string;
 
-        public dbConfig: Database;
+        public mongoDatabaseCfg: MongoDatabase;
+        public influxDatabaseCfg: InfluxDatabase;
         public authConfig: Auth;
         public mqttConfig: Mqtt;
         public serverConfig: Server;
@@ -36,7 +41,8 @@ export namespace Configuration {
         }
 
         public load = () => {
-            this.dbConfig = require(this.path + '/db-configs.json');
+            this.mongoDatabaseCfg = require(this.path + '/mongo-db-configs.json');
+            this.influxDatabaseCfg = require(this.path + '/influx-db-configs.json');
             this.authConfig = require(this.path + '/auth-configs.json');
             this.mqttConfig = require(this.path + '/mqtt-broker-credentials.json');
             this.serverConfig = require(this.path + '/server-configs.json');

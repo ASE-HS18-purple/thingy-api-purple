@@ -32,8 +32,8 @@ export class UserController extends BaseController {
     };
 
     private sendUserResponse(ctx: Router.IRouterContext, user: IUser, successCode: number, failCode: number) {
-        ctx.response.body = user;
         ctx.response.status = user ? successCode : failCode;
+        ctx.response.body = user;
     }
 
     getRoutes(router: Router): Router {

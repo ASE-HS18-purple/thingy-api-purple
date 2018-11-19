@@ -7,7 +7,7 @@ enum DatabaseConnectionState {
     Error
 }
 
-class DatabaseConnection {
+class MongoDatabaseConnection {
     private state: DatabaseConnectionState;
     private dbUrl: string;
     private dbName: string;
@@ -45,6 +45,6 @@ class DatabaseConnection {
 
 }
 
-export {DatabaseConnection};
+export {MongoDatabaseConnection};
 
 
