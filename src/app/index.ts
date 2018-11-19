@@ -18,11 +18,14 @@ import {Configuration} from '../service/ConfigurationService';
 import {ThingyService} from '../service/ThingyService';
 import {MqttService} from '../service/MqttService';
 import {EnvironmentalDataParserService} from '../service/EnvironmentalDataParserService';
+import {WebsocketController} from '../controllers/WebsocketController';
+import {Server} from 'http';
 
 
 class App {
 
     private controllers: Array<BaseController>;
+    private websocketController: WebsocketController;
     private authenticationService: AuthenticationService;
     private environmentalDataParserService: EnvironmentalDataParserService;
     private mqttService: MqttService;
@@ -32,6 +35,7 @@ class App {
     private config: Configuration.Loader;
     private mqttConnection: MqttConnection;
     private databaseConnection: DatabaseConnection;
+    private server: Server;
 
     constructor() {
         this.controllers = [];
@@ -47,7 +51,8 @@ class App {
         app.use(enableSecurity(this.authenticationService, this.config.authConfig.SECRET_KEY));
         app.use(bodyParser());
         app.use(router.routes());
-        await app.listen(this.config.serverConfig.SERVER_PORT);
+        this.server = await app.listen(this.config.serverConfig.SERVER_PORT);
+        this.websocketController = new WebsocketController(this.server, this.config.authConfig.SECRET_KEY);
         console.log(`App is up and running and listening to port: ${this.config.serverConfig.SERVER_PORT}`);
         console.log('Initiating database connection');
     };
