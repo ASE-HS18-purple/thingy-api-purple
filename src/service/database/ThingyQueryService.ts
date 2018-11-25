@@ -14,19 +14,13 @@ export class ThingyQueryService {
         return await Thingy.find({});
     }
 
-    public async updateThingyDevice(id: string, username: string, thingy: IThingy) {
-        // Try to search by the name id coming from client.
-        const thingyDevice = await Thingy.findById(id);
-        if (thingyDevice) {
-            // If the device is found, check if it belongs to the user who did the request.
-            if ((thingyDevice as any).username == username) {
-                await Thingy.updateOne({_id: id}, {
-                    deviceId: thingy.deviceId,
-                    name: thingy.name
-                });
-                return await Thingy.findById(id);
-            }
-        }
+    public async updateThingyDevice(thingy: IThingy) {
+        await Thingy.updateOne({_id: thingy.id}, {
+            deviceId: thingy.deviceId,
+            name: thingy.name,
+            location: thingy.location,
+        });
+        return await Thingy.findById(thingy.id);
     }
 
     public async deleteThingyDevice(id: string, username: string) {
@@ -51,8 +45,12 @@ export class ThingyQueryService {
         }
     }
 
-    public async findThingyDeviceById(deviceId: string) {
+    public async findThingyDeviceByDeviceId(deviceId: string) {
         return Thingy.find({deviceId: deviceId});
+    }
+
+    public async findThingyDeviceById(id: string): Promise<IThingy> {
+        return Thingy.findOne({_id: id});
     }
 
     public async findThingyDeviceByDeviceIdAndUsername(deviceId: string, username: string): Promise<IThingy> {

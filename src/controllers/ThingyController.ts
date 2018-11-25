@@ -9,14 +9,12 @@ export class ThingyController extends BaseController {
 
     private thingyQuerier: ThingyQueryService;
     private thingyService: ThingyService;
-    private mqttService: MqttService;
     protected zone: string = '/thingy';
 
-    constructor(thingyQuerier: ThingyQueryService, thingyService: ThingyService, mqttService: MqttService) {
+    constructor(thingyQuerier: ThingyQueryService, thingyService: ThingyService) {
         super();
         this.thingyQuerier = thingyQuerier;
         this.thingyService = thingyService;
-        this.mqttService = mqttService;
     }
 
     getRoutes(router: Router): Router {
@@ -46,10 +44,9 @@ export class ThingyController extends BaseController {
         const locationId = ctx.params.id;
         const username = ctx.state.user.user.username;
         const thingyDevice: IThingy = <IThingy>ctx.request.body;
-        const updatedThingyDeviceHandler = await this.thingyQuerier.updateThingyDevice(locationId, thingyDevice.deviceId, username);
+        const updatedThingyDeviceHandler = await this.thingyService.updateThingyDevice(thingyDevice, username);
         ctx.response.body = updatedThingyDeviceHandler;
         ctx.response.status = updatedThingyDeviceHandler ? 200 : 400;
-        this.mqttService.subscribe(thingyDevice.deviceId);
     };
 
     deleteThingy = async (ctx: Router.IRouterContext) => {

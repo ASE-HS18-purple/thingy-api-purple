@@ -19,7 +19,6 @@ export class ThingyService {
         const location = thingyModel.location;
         const thingyByDeviceId = await this.thingyQuerier.findThingyDeviceByDeviceIdAndUsername(deviceId, username);
         const thingyByName = await this.thingyQuerier.findThingyByNameAndUsername(name, username);
-        console.log(thingyByDeviceId, thingyByName);
         //If it is unique by name and by device id, create it!
         if (!thingyByDeviceId && !thingyByName) {
             // Create one.
@@ -33,5 +32,33 @@ export class ThingyService {
         }
         return configuredThingy;
     };
+
+
+    public async updateThingyDevice(thingyModel: IThingy, username: string): Promise<IThingy> {
+        let updatedThingy: IThingy = null;
+        // Initially search for the thingy
+        const thingyToUpdate = await this.thingyQuerier.findThingyDeviceById(thingyModel.id);
+        if (thingyToUpdate) {
+            // Check if the user wants to update the name. If yes, then check if it is unique.
+            if (thingyToUpdate.name != thingyModel.name) {
+                const thingyByName = await this.thingyQuerier.findThingyByNameAndUsername(thingyModel.name, username);
+                // If it already exists, then just return.
+                if (thingyByName) {
+                    return updatedThingy;
+                }
+            }
+            // Check if the user wants to update the device id. If yes, then check if it is unique.
+            if (thingyModel.deviceId != thingyToUpdate.deviceId) {
+                const thingyByDeviceId = await this.thingyQuerier.findThingyDeviceByDeviceIdAndUsername(thingyModel.deviceId, username);
+                if (thingyByDeviceId) {
+                    return updatedThingy;
+                }
+            }
+            // If we are here, it means that the device id and name are unique per user.
+            updatedThingy = await this.thingyQuerier.updateThingyDevice(thingyModel);
+            this.mqttService.subscribe(updatedThingy.id);
+        }
+        return updatedThingy;
+    }
 
 }
