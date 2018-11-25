@@ -2,25 +2,29 @@ import * as Router from 'koa-router';
 import * as WebSocket from 'ws';
 import {IncomingMessage, Server} from 'http';
 import * as jwt from 'jsonwebtoken';
+import {json} from 'body-parser';
+import {ThingyQueryService} from '../service/database/ThingyQueryService';
 
 export class WebsocketController {
 
     private server: WebSocket.Server;
-    private secretKey: string;
+    private sockets: Map<string, WebSocket> = new Map<string, WebSocket>();
+    private thingyQueryService: ThingyQueryService;
 
-    constructor(server: Server, secretKey: string) {
-        this.secretKey = secretKey;
+    constructor(server: Server, thingyQueryService: ThingyQueryService) {
+        this.thingyQueryService = thingyQueryService;
         this.server = new WebSocket.Server({server});
-        this.server.on('connection', this.onConnection)
-        this.server.on('message', this.onMessage)
+        this.server.on('connection', this.onConnection.bind(this));
     }
 
     private async onConnection(socket: WebSocket, request: IncomingMessage) {
-        // console.log(request);
+        socket.on('message', this.onMessage(socket).bind(this));
     }
 
-    private async onMessage(message: string) {
-        let user = await jwt.verify(message, this.secretKey);
-        console.log(message);
+    private onMessage(socket: WebSocket) {
+        return async (message: string) => {
+            let parsed = JSON.parse(message);
+            this.sockets.set(parsed, socket);
+        };
     }
 }

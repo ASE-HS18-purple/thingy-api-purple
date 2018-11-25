@@ -52,7 +52,7 @@ class App {
         app.use(bodyParser());
         app.use(router.routes());
         this.server = await app.listen(this.config.serverConfig.SERVER_PORT);
-        this.websocketController = new WebsocketController(this.server, this.config.authConfig.SECRET_KEY);
+        this.websocketController = new WebsocketController(this.server, this.thingyQueryService);
         console.log(`App is up and running and listening to port: ${this.config.serverConfig.SERVER_PORT}`);
         console.log('Initiating database connection');
     };
