@@ -2,10 +2,10 @@ import * as mqtt from 'mqtt';
 import {MqttClient} from 'mqtt';
 
 enum MqttConnectionState {
-    Connected,
-    Reconnecting,
-    Disconnected,
-    Error
+    Connected = "Connected",
+    Reconnecting = "Reconnecting",
+    Disconnected = "Disconnected",
+    Error = "Error"
 }
 
 class MqttConnection {
