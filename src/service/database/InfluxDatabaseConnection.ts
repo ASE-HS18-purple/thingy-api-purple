@@ -19,14 +19,28 @@ export class InfluxDatabaseConnection {
     connect = async () => {
         console.log('About to connect to influx database...');
         const influxDatabaseConn = await this.influxDbClient;
-        influxDatabaseConn.getDatabaseNames().then(dbNames => {
-            console.log('Influx database names = ', dbNames);
-            if (dbNames && !dbNames.includes(this.database)) {
-                influxDatabaseConn.createDatabase(this.database);
-            }
-        }).catch(error => {
-            console.log('Error connecting to influx database! Error = ', error);
-        });
+        influxDatabaseConn.getDatabaseNames()
+            .then(dbNames => {
+                console.log('Influx database names = ', dbNames);
+                if (dbNames && !dbNames.includes(this.database)) {
+                    influxDatabaseConn.createDatabase(this.database);
+                }
+            })
+            .catch(error => {
+                console.log('Error connecting to influx database! Error = ', error);
+            });
+        await influxDatabaseConn.createContinuousQuery('downsample_temperature',
+            'SELECT mean(value) as value INTO average_temperature ' +
+            'FROM temperature GROUP BY time(1m), *', this.database);
+        await influxDatabaseConn.createContinuousQuery('downsample_humidity',
+            'SELECT mean(value) as value INTO average_humidity ' +
+            'FROM humidity GROUP BY time(1m), *', this.database);
+        await influxDatabaseConn.createContinuousQuery('downsample_pressure',
+            'SELECT mean(value) as value INTO average_pressure ' +
+            'FROM pressure GROUP BY time(1m), *', this.database);
+        await influxDatabaseConn.createContinuousQuery('downsample_co2',
+            'SELECT mean(value) as value INTO average_co2 ' +
+            'FROM co2 GROUP BY time(1m), *', this.database);
     };
 
     private constructClient(): Influx.InfluxDB {

@@ -39,19 +39,19 @@ export class EnvironmentalDataQueryService {
     }
 
     public async getTemperatureData(from: number, to: number, configId: string) {
-        return await this.queryEnvData(from, to, configId, 'temperature');
+        return await this.queryEnvData(from, to, configId, 'average_temperature');
     }
 
     public async getPressureData(from: number, to: number, configId: string) {
-        return await this.queryEnvData(from, to, configId, 'pressure');
+        return await this.queryEnvData(from, to, configId, 'average_pressure');
     }
 
     public async getHumidityData(from: number, to: number, configId: string) {
-        return await this.queryEnvData(from, to, configId, 'humidity');
+        return await this.queryEnvData(from, to, configId, 'average_humidity');
     }
 
     public async getAirQualityData(from: number, to: number, configId: string) {
-        return await this.queryEnvData(from, to, configId, 'co2');
+        return await this.queryEnvData(from, to, configId, 'average_co2');
     }
 
 
