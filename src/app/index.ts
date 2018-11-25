@@ -86,7 +86,7 @@ class App {
         this.controllers.push(
             new AuthenticationController(this.userQueryService, this.config.authConfig.SECRET_KEY),
             new MqttController(this.mqttConnection),
-            new ThingyController(this.thingyQueryService, this.thingyService, this.mqttService),
+            new ThingyController(this.thingyQueryService, this.thingyService),
             new UserController(this.userQueryService),
             new EnvironmentalDataController(this.environmentalDataQueryService, this.thingyQueryService));
         let router: Router = new Router();

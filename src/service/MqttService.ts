@@ -70,7 +70,7 @@ export class MqttService {
 
     private async storeEnvData(topic: string, value: number) {
         const deviceId = topic.split('/')[0];
-        const thingyDevices = await this.thingyQuerier.findThingyDeviceById(deviceId);
+        const thingyDevices = await this.thingyQuerier.findThingyDeviceByDeviceId(deviceId);
         if (thingyDevices) {
             thingyDevices.forEach(async thingyDevice => {
                 if (topic.endsWith(MqttService.temperatureCharacteristic)) {

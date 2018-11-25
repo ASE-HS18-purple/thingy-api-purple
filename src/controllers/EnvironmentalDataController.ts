@@ -68,7 +68,7 @@ export class EnvironmentalDataController extends BaseController {
             if (unit == 'CO2') {
                 res = await this.environmentalDataQueryService.getAirQualityData(from, to, thingyDevice._id);
             }
-            let dataset = {id: thingyDevice._id, thingyName: thingyDevice.location, properties: new Array()};
+            let dataset = {id: thingyDevice._id, thingyName: thingyDevice.name, properties: new Array()};
             res.forEach(entry => {
                 let tempVal = {value: (entry as any).value, time: (entry as any).time};
                 dataset.properties.push({value: (entry as any).value, time: (entry as any).time});

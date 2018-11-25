@@ -15,27 +15,50 @@ export class ThingyService {
     public configureNewThingyDevice = async (thingyModel: IThingy, username: string): Promise<IThingy> => {
         let configuredThingy: IThingy = null;
         const deviceId = thingyModel.deviceId;
+        const name = thingyModel.name;
         const location = thingyModel.location;
-        const foundThingy = await this.thingyQuerier.findThingByUsernameAndLocation(username, location);
-        if (!foundThingy) {
+        const thingyByDeviceId = await this.thingyQuerier.findThingyDeviceByDeviceIdAndUsername(deviceId, username);
+        const thingyByName = await this.thingyQuerier.findThingyByNameAndUsername(name, username);
+        //If it is unique by name and by device id, create it!
+        if (!thingyByDeviceId && !thingyByName) {
             // Create one.
             configuredThingy = await Thingy.create(new Thingy({
-                location: location,
+                name: name,
                 username: username,
                 deviceId: deviceId,
+                location: location,
             }));
-        } else {
-            // Simply update it.
-            const id = (foundThingy as any)._id;
-            await Thingy.updateOne({_id: id}, {
-                location: location,
-                username: username,
-                deviceId: deviceId,
-            });
-            configuredThingy = await Thingy.findOne({_id: id});
+            this.mqttService.subscribe(configuredThingy.deviceId);
         }
-        this.mqttService.subscribe(configuredThingy.deviceId);
         return configuredThingy;
     };
+
+
+    public async updateThingyDevice(thingyModel: IThingy, username: string): Promise<IThingy> {
+        let updatedThingy: IThingy = null;
+        // Initially search for the thingy
+        const thingyToUpdate = await this.thingyQuerier.findThingyDeviceById(thingyModel.id);
+        if (thingyToUpdate) {
+            // Check if the user wants to update the name. If yes, then check if it is unique.
+            if (thingyToUpdate.name != thingyModel.name) {
+                const thingyByName = await this.thingyQuerier.findThingyByNameAndUsername(thingyModel.name, username);
+                // If it already exists, then just return.
+                if (thingyByName) {
+                    return updatedThingy;
+                }
+            }
+            // Check if the user wants to update the device id. If yes, then check if it is unique.
+            if (thingyModel.deviceId != thingyToUpdate.deviceId) {
+                const thingyByDeviceId = await this.thingyQuerier.findThingyDeviceByDeviceIdAndUsername(thingyModel.deviceId, username);
+                if (thingyByDeviceId) {
+                    return updatedThingy;
+                }
+            }
+            // If we are here, it means that the device id and name are unique per user.
+            updatedThingy = await this.thingyQuerier.updateThingyDevice(thingyModel);
+            this.mqttService.subscribe(updatedThingy.id);
+        }
+        return updatedThingy;
+    }
 
 }
