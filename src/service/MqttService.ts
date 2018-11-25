@@ -4,23 +4,28 @@ import {EnvironmentalDataParserService} from './EnvironmentalDataParserService';
 import {ThingyService} from './ThingyService';
 import {ThingyQueryService} from './database/ThingyQueryService';
 import {EnvironmentalDataQueryService} from './database/EnvironmentalDataQueryService';
+import {EventBus} from './EventBus';
+import {AirQualityEvent, HumidityEvent, PressureEvent, TemperatureEvent, ThingyDataEvent, ThingyNotifyEvents} from './ThingyNotifyEvents';
 
 export class MqttService {
 
-    private static temperatureCharacteristic = '/ef680200-9b35-4933-9b10-52ffa9740042/ef680201-9b35-4933-9b10-52ffa9740042';
-    private static pressureCharacteristic = '/ef680200-9b35-4933-9b10-52ffa9740042/ef680202-9b35-4933-9b10-52ffa9740042';
-    private static humidityCharacteristic = '/ef680200-9b35-4933-9b10-52ffa9740042/ef680203-9b35-4933-9b10-52ffa9740042';
-    private static airQualityCharacteristic = '/ef680200-9b35-4933-9b10-52ffa9740042/ef680204-9b35-4933-9b10-52ffa9740042';
+    private static environmentService = 'ef680200-9b35-4933-9b10-52ffa9740042';
+    private static temperatureCharacteristic = 'ef680201-9b35-4933-9b10-52ffa9740042';
+    private static pressureCharacteristic = 'ef680202-9b35-4933-9b10-52ffa9740042';
+    private static humidityCharacteristic = 'ef680203-9b35-4933-9b10-52ffa9740042';
+    private static airQualityCharacteristic = 'ef680204-9b35-4933-9b10-52ffa9740042';
     mqttConnection: MqttConnection;
     private environmentalDataParser: EnvironmentalDataParserService;
     private thingyQuerier: ThingyQueryService;
     private environmentalDataQueryService: EnvironmentalDataQueryService;
+    private eventBus: EventBus;
 
-    constructor(mqttBrokerClient: MqttConnection, thingyQuerier: ThingyQueryService, environmentalDataQueryService: EnvironmentalDataQueryService, environmentalDataParser: EnvironmentalDataParserService) {
+    constructor(mqttBrokerClient: MqttConnection, thingyQuerier: ThingyQueryService, environmentalDataQueryService: EnvironmentalDataQueryService, environmentalDataParser: EnvironmentalDataParserService, eventBus: EventBus) {
         this.mqttConnection = mqttBrokerClient;
         this.environmentalDataParser = environmentalDataParser;
         this.thingyQuerier = thingyQuerier;
         this.environmentalDataQueryService = environmentalDataQueryService;
+        this.eventBus = eventBus;
     }
 
     public initSubscriptionToMqtt = async () => {
@@ -38,10 +43,10 @@ export class MqttService {
     };
 
     subscribe(deviceId: string) {
-        const temperatureTopic = deviceId + MqttService.temperatureCharacteristic;
-        const pressureTopic = deviceId + MqttService.pressureCharacteristic;
-        const humidityTopic = deviceId + MqttService.humidityCharacteristic;
-        const airQualityTopic = deviceId + MqttService.airQualityCharacteristic;
+        const temperatureTopic = `${deviceId}/${MqttService.environmentService}/${MqttService.temperatureCharacteristic}`;
+        const pressureTopic = `${deviceId}/${MqttService.environmentService}/${MqttService.pressureCharacteristic}`;
+        const humidityTopic = `${deviceId}/${MqttService.environmentService}/${MqttService.humidityCharacteristic}`;
+        const airQualityTopic = `${deviceId}/${MqttService.environmentService}/${MqttService.airQualityCharacteristic}`;
         this.mqttConnection.client.subscribe(temperatureTopic);
         this.mqttConnection.client.subscribe(pressureTopic);
         this.mqttConnection.client.subscribe(humidityTopic);
@@ -51,20 +56,35 @@ export class MqttService {
 
     private setEventHandlers = async () => {
         this.mqttConnection.client.on('message', (topic: string, message: any) => {
-            let environmentalVal: number;
-            if (topic.endsWith(MqttService.temperatureCharacteristic)) {
-                environmentalVal = this.environmentalDataParser.parseTemperature(message);
+            let splittedTopic = topic.split('/');
+            let deviceId = splittedTopic[0];
+            let service = splittedTopic[1];
+            let characteristic = splittedTopic[2];
+            let thingyEvent: ThingyDataEvent;
+            let timestamp = new Date().getTime();
+            switch (characteristic) {
+                case MqttService.temperatureCharacteristic:
+                    let temperature = this.environmentalDataParser.parseTemperature(message);
+                    thingyEvent = new TemperatureEvent(timestamp, deviceId, temperature);
+                    this.eventBus.fireTemperatureEvent(thingyEvent);
+                    break;
+                case MqttService.pressureCharacteristic:
+                    let pressure = this.environmentalDataParser.parsePressure(message);
+                    thingyEvent = new PressureEvent(timestamp, deviceId, pressure);
+                    this.eventBus.firePressureEvent(thingyEvent);
+                    break;
+                case MqttService.humidityCharacteristic:
+                    let humidity = this.environmentalDataParser.parseHumidity(message);
+                    thingyEvent = new HumidityEvent(timestamp, deviceId, humidity);
+                    this.eventBus.fireHumidityEvent(thingyEvent);
+                    break;
+                case MqttService.airQualityCharacteristic:
+                    let airQuality = this.environmentalDataParser.parseAirQuality(message)[0];
+                    thingyEvent = new AirQualityEvent(timestamp, deviceId, airQuality);
+                    this.eventBus.fireAirQualityEvent(thingyEvent);
+                    break;
             }
-            if (topic.endsWith(MqttService.pressureCharacteristic)) {
-                environmentalVal = this.environmentalDataParser.parsePressure(message);
-            }
-            if (topic.endsWith(MqttService.humidityCharacteristic)) {
-                environmentalVal = this.environmentalDataParser.parseHumidity(message);
-            }
-            if (topic.endsWith(MqttService.airQualityCharacteristic)) {
-                environmentalVal = this.environmentalDataParser.parseAirQuality(message)[0];
-            }
-            this.storeEnvData(topic, environmentalVal);
+            // this.storeEnvData(topic, environmentalVal);
         });
     };
 

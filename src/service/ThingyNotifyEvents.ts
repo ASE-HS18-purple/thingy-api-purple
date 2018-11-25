@@ -3,10 +3,10 @@ import {SimpleEventDispatcher} from 'strongly-typed-events';
 class ThingyDataEvent {
     
     readonly timestamp: number;
-    readonly thingyId: number;
+    readonly thingyId: string;
     readonly value: number;
 
-    constructor(timestamp: number, thingyId: number, value: number) {
+    constructor(timestamp: number, thingyId: string, value: number) {
         this.timestamp = timestamp;
         this.thingyId = thingyId;
         this.value = value;

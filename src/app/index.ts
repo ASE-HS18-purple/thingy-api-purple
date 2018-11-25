@@ -23,6 +23,7 @@ import {EnvironmentalDataQueryService} from '../service/database/EnvironmentalDa
 import {EnvironmentalDataController} from '../controllers/EnvironmentalDataController';
 import {WebsocketController} from '../controllers/WebsocketController';
 import {Server} from 'http';
+import {EventBus} from '../service/EventBus';
 
 
 class App {
@@ -41,6 +42,7 @@ class App {
     private server: Server;
     private mongoDatabaseConnection: MongoDatabaseConnection;
     private influxDatabaseConnection: InfluxDatabaseConnection;
+    private eventbus: EventBus;
 
     constructor() {
         this.controllers = [];
@@ -48,6 +50,7 @@ class App {
 
     public start = async () => {
         console.log('Starting the app...');
+        this.eventbus = new EventBus();
         this.loadConfig();
         this.initializeServices();
         let router = this.initializeControllers();
@@ -57,7 +60,7 @@ class App {
         app.use(bodyParser());
         app.use(router.routes());
         this.server = await app.listen(this.config.serverConfig.SERVER_PORT);
-        this.websocketController = new WebsocketController(this.server, this.thingyQueryService);
+        this.websocketController = new WebsocketController(this.server, this.thingyQueryService, this.eventbus);
         console.log(`App is up and running and listening to port: ${this.config.serverConfig.SERVER_PORT}`);
         console.log('Initiating database connection');
     };
@@ -79,7 +82,7 @@ class App {
         this.authenticationService = new AuthenticationService(this.config.serverConfig.PUBLIC_APIS);
         this.environmentalDataParserService = new EnvironmentalDataParserService();
         this.environmentalDataQueryService = new EnvironmentalDataQueryService(this.influxDatabaseConnection);
-        this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataQueryService, this.environmentalDataParserService);
+        this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataQueryService, this.environmentalDataParserService, this.eventbus);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
         this.mqttConnection.initConnection();
         this.mqttService.initSubscriptionToMqtt();

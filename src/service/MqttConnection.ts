@@ -57,4 +57,4 @@ class MqttConnection {
     }
 }
 
-export {MqttConnection};
+export {MqttConnection, MqttConnectionState};

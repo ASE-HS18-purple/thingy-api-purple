@@ -3,16 +3,16 @@ import {AirQualityEvent, HumidityEvent, PressureEvent, TemperatureEvent, ThingyD
 
 export class EventBus {
 
-    private specificThingyEvents: Map<number, ThingyNotifyEvents> = new Map<number, ThingyNotifyEvents>();
+    private specificThingyEvents: Map<string, ThingyNotifyEvents> = new Map<string, ThingyNotifyEvents>();
     private allThingyEvents: ThingyNotifyEvents = new ThingyNotifyEvents();
 
-    private createThingyEventsIfNotExisting(thingyId: number) {
+    private createThingyEventsIfNotExisting(thingyId: string) {
         if (!this.specificThingyEvents.has(thingyId)) {
             this.specificThingyEvents.set(thingyId, new ThingyNotifyEvents());
         }
     }
 
-    private getThingyNotifyEvent(thingyId: number) {
+    private getThingyNotifyEvent(thingyId?: string) {
         let thingyEvents: ThingyNotifyEvents;
         if (thingyId) {
             this.createThingyEventsIfNotExisting(thingyId);
@@ -23,64 +23,73 @@ export class EventBus {
         return thingyEvents;
     }
 
-    public subscribeToTemperature(handler: ISimpleEventHandler<TemperatureEvent>, thingyId?: number) {
+    public subscribeToTemperature(handler: ISimpleEventHandler<TemperatureEvent>, thingyId?: string) {
         let thingyEvents = this.getThingyNotifyEvent(thingyId);
         thingyEvents.temperatureEvent.subscribe(handler);
     }
-    public unsubscribeToTemperature(handler: ISimpleEventHandler<TemperatureEvent>, thingyId?: number) {
+    public unsubscribeToTemperature(handler: ISimpleEventHandler<TemperatureEvent>, thingyId?: string) {
         let thingyEvents = this.getThingyNotifyEvent(thingyId);
         thingyEvents.temperatureEvent.unsubscribe(handler);
     }
 
-    public subscribeToHumidity(handler: ISimpleEventHandler<HumidityEvent>, thingyId?: number) {
+    public subscribeToHumidity(handler: ISimpleEventHandler<HumidityEvent>, thingyId?: string) {
         let thingyEvents = this.getThingyNotifyEvent(thingyId);
         thingyEvents.humidityEvent.subscribe(handler);
     }
-    public unsubscribeToHumidity(handler: ISimpleEventHandler<HumidityEvent>, thingyId?: number) {
+    public unsubscribeToHumidity(handler: ISimpleEventHandler<HumidityEvent>, thingyId?: string) {
         let thingyEvents = this.getThingyNotifyEvent(thingyId);
         thingyEvents.humidityEvent.unsubscribe(handler);
     }
 
-    public subscribeToAirQuality(handler: ISimpleEventHandler<AirQualityEvent>, thingyId?: number) {
+    public subscribeToAirQuality(handler: ISimpleEventHandler<AirQualityEvent>, thingyId?: string) {
         let thingyEvents = this.getThingyNotifyEvent(thingyId);
         thingyEvents.airQualityEvent.subscribe(handler);
     }
-    public unsubscribeToAirQuality(handler: ISimpleEventHandler<AirQualityEvent>, thingyId?: number) {
+    public unsubscribeToAirQuality(handler: ISimpleEventHandler<AirQualityEvent>, thingyId?: string) {
         let thingyEvents = this.getThingyNotifyEvent(thingyId);
         thingyEvents.airQualityEvent.unsubscribe(handler);
     }
 
-    public subscribeToPressure(handler: ISimpleEventHandler<PressureEvent>, thingyId?: number) {
+    public subscribeToPressure(handler: ISimpleEventHandler<PressureEvent>, thingyId?: string) {
         let thingyEvents = this.getThingyNotifyEvent(thingyId);
         thingyEvents.pressureEvent.subscribe(handler);
     }
-    public unsubscribeToPressure(handler: ISimpleEventHandler<PressureEvent>, thingyId?: number) {
+    public unsubscribeToPressure(handler: ISimpleEventHandler<PressureEvent>, thingyId?: string) {
         let thingyEvents = this.getThingyNotifyEvent(thingyId);
         thingyEvents.pressureEvent.unsubscribe(handler);
     }
 
-    public fireTemperatureEvent(event: TemperatureEvent, thingyId?: number) {
+    public fireTemperatureEvent(event: TemperatureEvent) {
+        let thingyId = event.thingyId;
         let eventDispatcher: SimpleEventDispatcher<TemperatureEvent> = this.getThingyNotifyEvent(thingyId).temperatureEvent;
-        eventDispatcher.dispatch(event);
-        this.allThingyEvents.temperatureEvent.dispatchAsync(event);
+        let allTemperatureEvent = this.allThingyEvents.temperatureEvent;
+        this.dispatchEvents(thingyId, eventDispatcher, event, allTemperatureEvent);
     }
 
-    public fireHumidityEvent(event: HumidityEvent, thingyId?: number) {
+    public fireHumidityEvent(event: HumidityEvent) {
+        let thingyId = event.thingyId;
         let eventDispatcher: SimpleEventDispatcher<HumidityEvent> = this.getThingyNotifyEvent(thingyId).humidityEvent;
-        eventDispatcher.dispatchAsync(event);
-        this.allThingyEvents.humidityEvent.dispatchAsync(event);
+        let allHumidityEvent = this.allThingyEvents.humidityEvent;
+        this.dispatchEvents(thingyId, eventDispatcher, event, allHumidityEvent);
     }
 
-    public fireAirQualityEvent(event: AirQualityEvent, thingyId?: number) {
+    public fireAirQualityEvent(event: AirQualityEvent) {
+        let thingyId = event.thingyId;
         let eventDispatcher: SimpleEventDispatcher<AirQualityEvent> = this.getThingyNotifyEvent(thingyId).airQualityEvent;
-        eventDispatcher.dispatchAsync(event);
-        this.allThingyEvents.airQualityEvent.dispatchAsync(event);
+        let allairQualityEvent = this.allThingyEvents.airQualityEvent;
+        this.dispatchEvents(thingyId, eventDispatcher, event, allairQualityEvent);
     }
 
-    public firePressureEvent(event: PressureEvent, thingyId?: number) {
-        let eventDispatcher: SimpleEventDispatcher<PressureEvent> = this.getThingyNotifyEvent(thingyId).pressureEvent;
+    private dispatchEvents(source: string, eventDispatcher: SimpleEventDispatcher<AirQualityEvent>, event: AirQualityEvent, allairQualityEvent: SimpleEventDispatcher<ThingyDataEvent>) {
         eventDispatcher.dispatchAsync(event);
-        this.allThingyEvents.pressureEvent.dispatchAsync(event);
+        allairQualityEvent.dispatchAsync(event);
+    }
+
+    public firePressureEvent(event: PressureEvent) {
+        let thingyId = event.thingyId;
+        let eventDispatcher: SimpleEventDispatcher<PressureEvent> = this.getThingyNotifyEvent(thingyId).pressureEvent;
+        let allEvent = this.allThingyEvents.pressureEvent;
+        this.dispatchEvents(thingyId, eventDispatcher, event, allEvent);
     }
 
 }
