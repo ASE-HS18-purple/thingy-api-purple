@@ -14,22 +14,15 @@ export class ThingyQueryService {
         return await Thingy.find({});
     }
 
-    public async findThingByUsernameAndLocation(username: string, location: string): Promise<IThingy> {
-        const thingy = await Thingy.findOne({
-            username: username,
-            location: location,
-        });
-        return thingy;
-    }
-
-    public async updateThingyDeviceByLocationId(id: string, deviceId: any, username: string) {
-        // Try to search by the location id coming from client.
+    public async updateThingyDevice(id: string, username: string, thingy: IThingy) {
+        // Try to search by the name id coming from client.
         const thingyDevice = await Thingy.findById(id);
         if (thingyDevice) {
             // If the device is found, check if it belongs to the user who did the request.
             if ((thingyDevice as any).username == username) {
                 await Thingy.updateOne({_id: id}, {
-                    deviceId: deviceId
+                    deviceId: thingy.deviceId,
+                    name: thingy.name
                 });
                 return await Thingy.findById(id);
             }
@@ -62,4 +55,11 @@ export class ThingyQueryService {
         return Thingy.find({deviceId: deviceId});
     }
 
+    public async findThingyDeviceByDeviceIdAndUsername(deviceId: string, username: string): Promise<IThingy> {
+        return Thingy.findOne({deviceId: deviceId, username: username});
+    }
+
+    public async findThingyByNameAndUsername(name: string, username: string): Promise<IThingy> {
+        return Thingy.findOne({name: name, username: username});
+    }
 }

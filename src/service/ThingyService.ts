@@ -15,26 +15,22 @@ export class ThingyService {
     public configureNewThingyDevice = async (thingyModel: IThingy, username: string): Promise<IThingy> => {
         let configuredThingy: IThingy = null;
         const deviceId = thingyModel.deviceId;
+        const name = thingyModel.name;
         const location = thingyModel.location;
-        const foundThingy = await this.thingyQuerier.findThingByUsernameAndLocation(username, location);
-        if (!foundThingy) {
+        const thingyByDeviceId = await this.thingyQuerier.findThingyDeviceByDeviceIdAndUsername(deviceId, username);
+        const thingyByName = await this.thingyQuerier.findThingyByNameAndUsername(name, username);
+        console.log(thingyByDeviceId, thingyByName);
+        //If it is unique by name and by device id, create it!
+        if (!thingyByDeviceId && !thingyByName) {
             // Create one.
             configuredThingy = await Thingy.create(new Thingy({
-                location: location,
+                name: name,
                 username: username,
                 deviceId: deviceId,
+                location: location,
             }));
-        } else {
-            // Simply update it.
-            const id = (foundThingy as any)._id;
-            await Thingy.updateOne({_id: id}, {
-                location: location,
-                username: username,
-                deviceId: deviceId,
-            });
-            configuredThingy = await Thingy.findOne({_id: id});
+            this.mqttService.subscribe(configuredThingy.deviceId);
         }
-        this.mqttService.subscribe(configuredThingy.deviceId);
         return configuredThingy;
     };
 
