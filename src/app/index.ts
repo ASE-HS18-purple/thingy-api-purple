@@ -21,11 +21,15 @@ import {EnvironmentalDataParserService} from '../service/EnvironmentalDataParser
 import {InfluxDatabaseConnection} from '../service/database/InfluxDatabaseConnection';
 import {EnvironmentalDataQueryService} from '../service/database/EnvironmentalDataQueryService';
 import {EnvironmentalDataController} from '../controllers/EnvironmentalDataController';
+import {WebsocketController} from '../controllers/WebsocketController';
+import {Server} from 'http';
+import {EventBus} from '../service/EventBus';
 
 
 class App {
 
     private controllers: Array<BaseController>;
+    private websocketController: WebsocketController;
     private authenticationService: AuthenticationService;
     private environmentalDataParserService: EnvironmentalDataParserService;
     private mqttService: MqttService;
@@ -35,8 +39,10 @@ class App {
     private environmentalDataQueryService: EnvironmentalDataQueryService;
     private config: Configuration.Loader;
     private mqttConnection: MqttConnection;
+    private server: Server;
     private mongoDatabaseConnection: MongoDatabaseConnection;
     private influxDatabaseConnection: InfluxDatabaseConnection;
+    private eventbus: EventBus;
 
     constructor() {
         this.controllers = [];
@@ -44,6 +50,7 @@ class App {
 
     public start = async () => {
         console.log('Starting the app...');
+        this.eventbus = new EventBus();
         this.loadConfig();
         this.initializeServices();
         let router = this.initializeControllers();
@@ -52,7 +59,9 @@ class App {
         app.use(enableSecurity(this.authenticationService, this.config.authConfig.SECRET_KEY));
         app.use(bodyParser());
         app.use(router.routes());
-        await app.listen(this.config.serverConfig.SERVER_PORT);
+        this.server = await app.listen(this.config.serverConfig.SERVER_PORT);
+        this.websocketController = new WebsocketController(this.server, this.thingyQueryService, this.eventbus);
+        this.mqttConnection.initConnection();
         console.log(`App is up and running and listening to port: ${this.config.serverConfig.SERVER_PORT}`);
         console.log('Initiating database connection');
     };
@@ -68,15 +77,14 @@ class App {
         const influxDbConfig = this.config.influxDatabaseCfg;
         this.thingyQueryService = new ThingyQueryService();
         this.userQueryService = new UserQueryService();
-        this.mqttConnection = new MqttConnection(mqttConfig.mqtt, mqttConfig.port, mqttConfig.username, mqttConfig.password);
+        this.mqttConnection = new MqttConnection(mqttConfig.mqtt, mqttConfig.port, mqttConfig.username, mqttConfig.password, this.eventbus);
         this.mongoDatabaseConnection = new MongoDatabaseConnection(mongoDbConfig.DATABASE_URL, mongoDbConfig.DATABASE_NAME);
         this.influxDatabaseConnection = new InfluxDatabaseConnection(influxDbConfig.DATABASE_URL, influxDbConfig.DATABASE_NAME);
         this.authenticationService = new AuthenticationService(this.config.serverConfig.PUBLIC_APIS);
         this.environmentalDataParserService = new EnvironmentalDataParserService();
-        this.environmentalDataQueryService = new EnvironmentalDataQueryService(this.influxDatabaseConnection);
-        this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataQueryService, this.environmentalDataParserService);
+        this.environmentalDataQueryService = new EnvironmentalDataQueryService(this.influxDatabaseConnection, this.eventbus);
+        this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataQueryService, this.environmentalDataParserService, this.eventbus);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
-        this.mqttConnection.initConnection();
         this.mqttService.initSubscriptionToMqtt();
         this.mongoDatabaseConnection.connect();
         this.influxDatabaseConnection.connect();
@@ -86,7 +94,7 @@ class App {
         this.controllers.push(
             new AuthenticationController(this.userQueryService, this.config.authConfig.SECRET_KEY),
             new MqttController(this.mqttConnection),
-            new ThingyController(this.thingyQueryService, this.thingyService),
+            new ThingyController(this.thingyQueryService, this.thingyService, this.mqttService),
             new UserController(this.userQueryService),
             new EnvironmentalDataController(this.environmentalDataQueryService, this.thingyQueryService));
         let router: Router = new Router();

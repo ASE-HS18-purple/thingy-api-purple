@@ -1,5 +1,6 @@
 import * as mqtt from 'mqtt';
 import {MqttClient} from 'mqtt';
+import {EventBus} from './EventBus';
 
 enum MqttConnectionState {
     Connected = "Connected",
@@ -8,6 +9,12 @@ enum MqttConnectionState {
     Error = "Error"
 }
 
+class MqttConnectionEvent {
+    constructor(public timestamp: number, public  mqttState: MqttConnectionState) {}
+}
+
+
+
 class MqttConnection {
     private _connectionState: MqttConnectionState;
     client: MqttClient;
@@ -15,13 +22,15 @@ class MqttConnection {
     private port: number;
     private username: string;
     private password: string;
+    private eventBus: EventBus;
 
-    constructor(host: string, port: number, username: string, passwort: string) {
+    constructor(host: string, port: number, username: string, passwort: string, eventBus: EventBus) {
         this.host = host;
         this.port = port;
         this.username = username;
         this.password = passwort;
-        this._connectionState = MqttConnectionState.Disconnected;
+        this.eventBus = eventBus;
+        this.connectionState = MqttConnectionState.Disconnected;
     }
 
     /**
@@ -38,23 +47,30 @@ class MqttConnection {
 
         this.client.on('connect', () => {
             console.log('Connected!');
-            this._connectionState = MqttConnectionState.Connected
+            this.connectionState = MqttConnectionState.Connected
         });
 
         this.client.on('reconnect', () => {
             console.log('Reconnecting...!');
-            this._connectionState = MqttConnectionState.Reconnecting
+            this.connectionState = MqttConnectionState.Reconnecting
         });
 
         this.client.on('close', () => {
             console.log('Disconnection...');
-            this._connectionState = MqttConnectionState.Disconnected
+            this.connectionState = MqttConnectionState.Disconnected
         });
     };
 
     get connectionState(): MqttConnectionState {
         return this._connectionState;
     }
+
+    set connectionState(newState: MqttConnectionState) {
+        this._connectionState = newState;
+        console.log(newState);
+        let mqttConnectionEvent = new MqttConnectionEvent(new Date().getTime(), newState);
+        this.eventBus.fireMqttConnectionEvent(mqttConnectionEvent);
+    }
 }
 
-export {MqttConnection};
+export {MqttConnection, MqttConnectionState, MqttConnectionEvent};

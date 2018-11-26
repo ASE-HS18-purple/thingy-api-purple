@@ -1,28 +1,36 @@
 import {InfluxDatabaseConnection} from './InfluxDatabaseConnection';
-import {IQueryOptions, IResults} from 'influx';
+import {EventBus} from '../EventBus';
+import {ThingyDataEvent} from '../ThingyNotifyEventDispatchers';
+
+export enum Measurement {
+    Temperature = 'temperature',
+    Humidity = 'humidity',
+    Pressure = 'pressure',
+    CO2 = 'co2',
+}
 
 export class EnvironmentalDataQueryService {
 
     private influxDatabase: InfluxDatabaseConnection;
+    private eventbus: EventBus;
 
-    constructor(influxDatabaseService: InfluxDatabaseConnection) {
+    constructor(influxDatabaseService: InfluxDatabaseConnection, eventbus: EventBus) {
         this.influxDatabase = influxDatabaseService;
+        this.eventbus = eventbus;
+        // this.initSubscriptions();
     }
 
-    public async storeTemperature(configId: string, value: number) {
-        await this.storeEnvData(configId, value, 'temperature');
+    public initSubscriptions() {
+        this.eventbus.subscribeToAirQuality(this.storeMeasurement(Measurement.CO2));
+        this.eventbus.subscribeToTemperature(this.storeMeasurement(Measurement.Temperature));
+        this.eventbus.subscribeToPressure(this.storeMeasurement(Measurement.Pressure));
+        this.eventbus.subscribeToHumidity(this.storeMeasurement(Measurement.Humidity));
     }
 
-    public async storeHumidity(configId: string, value: number) {
-        await this.storeEnvData(configId, value, 'humidity');
-    }
-
-    public async storePressure(configId: string, value: number) {
-        await this.storeEnvData(configId, value, 'pressure');
-    }
-
-    public async storeCO2(configId: string, value: number) {
-        await this.storeEnvData(configId, value, 'co2');
+    private storeMeasurement(property: Measurement) {
+        return async (thingyData: ThingyDataEvent) => {
+            this.storeEnvData(thingyData.thingyId, thingyData.value, property);
+        }
     }
 
     private async storeEnvData(configId: string, value: number, measurement: string) {
@@ -39,25 +47,25 @@ export class EnvironmentalDataQueryService {
     }
 
     public async getTemperatureData(from: number, to: number, configId: string) {
-        return await this.queryEnvData(from, to, configId, 'average_temperature');
+        return await this.queryEnvData(from, to, configId, Measurement.Temperature);
     }
 
     public async getPressureData(from: number, to: number, configId: string) {
-        return await this.queryEnvData(from, to, configId, 'average_pressure');
+        return await this.queryEnvData(from, to, configId, Measurement.Pressure);
     }
 
     public async getHumidityData(from: number, to: number, configId: string) {
-        return await this.queryEnvData(from, to, configId, 'average_humidity');
+        return await this.queryEnvData(from, to, configId, Measurement.Humidity);
     }
 
     public async getAirQualityData(from: number, to: number, configId: string) {
-        return await this.queryEnvData(from, to, configId, 'average_co2');
+        return await this.queryEnvData(from, to, configId, Measurement.CO2);
     }
 
 
-    private async queryEnvData(from: number, to: number, configId: string, measurement: string) {
-        const fromDate = new Date(new Number(from)).toISOString();
-        const toDate = new Date(new Number(to)).toISOString();
+    private async queryEnvData(from: number, to: number, configId: string, measurement: Measurement) {
+        const fromDate = new Date(from).toISOString();
+        const toDate = new Date(to).toISOString();
         const query = ` SELECT time, value FROM ${measurement} WHERE configId = '${configId}' AND time > '${fromDate}' AND time < '${toDate}'`;
         const data = this.influxDatabase.getInFluxDbClient().query(query);
         return data;
