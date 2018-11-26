@@ -1,19 +1,21 @@
 import {SimpleEventDispatcher, ISimpleEvent, ISimpleEventHandler} from 'strongly-typed-events';
-import {AirQualityEvent, HumidityEvent, PressureEvent, TemperatureEvent, ThingyDataEvent, ThingyNotifyEvents} from './ThingyNotifyEvents';
+import {AirQualityEvent, HumidityEvent, PressureEvent, TemperatureEvent, ThingyDataEvent, ThingyNotifyEventDispatchers} from './ThingyNotifyEventDispatchers';
+import {MqttConnectionEvent} from './MqttConnection';
 
 export class EventBus {
 
-    private specificThingyEvents: Map<string, ThingyNotifyEvents> = new Map<string, ThingyNotifyEvents>();
-    private allThingyEvents: ThingyNotifyEvents = new ThingyNotifyEvents();
+    private specificThingyEvents: Map<string, ThingyNotifyEventDispatchers> = new Map<string, ThingyNotifyEventDispatchers>();
+    private allThingyEvents: ThingyNotifyEventDispatchers = new ThingyNotifyEventDispatchers();
+    private mqttEventDispatcher: SimpleEventDispatcher<MqttConnectionEvent> = new SimpleEventDispatcher<MqttConnectionEvent>();
 
     private createThingyEventsIfNotExisting(thingyId: string) {
         if (!this.specificThingyEvents.has(thingyId)) {
-            this.specificThingyEvents.set(thingyId, new ThingyNotifyEvents());
+            this.specificThingyEvents.set(thingyId, new ThingyNotifyEventDispatchers());
         }
     }
 
     private getThingyNotifyEvent(thingyId?: string) {
-        let thingyEvents: ThingyNotifyEvents;
+        let thingyEvents: ThingyNotifyEventDispatchers;
         if (thingyId) {
             this.createThingyEventsIfNotExisting(thingyId);
             thingyEvents = this.specificThingyEvents.get(thingyId);
@@ -63,24 +65,31 @@ export class EventBus {
         let thingyId = event.thingyId;
         let eventDispatcher: SimpleEventDispatcher<TemperatureEvent> = this.getThingyNotifyEvent(thingyId).temperatureEvent;
         let allTemperatureEvent = this.allThingyEvents.temperatureEvent;
-        this.dispatchEvents(thingyId, eventDispatcher, event, allTemperatureEvent);
+        this.dispatchThingyEvents(thingyId, eventDispatcher, event, allTemperatureEvent);
     }
 
     public fireHumidityEvent(event: HumidityEvent) {
         let thingyId = event.thingyId;
         let eventDispatcher: SimpleEventDispatcher<HumidityEvent> = this.getThingyNotifyEvent(thingyId).humidityEvent;
         let allHumidityEvent = this.allThingyEvents.humidityEvent;
-        this.dispatchEvents(thingyId, eventDispatcher, event, allHumidityEvent);
+        this.dispatchThingyEvents(thingyId, eventDispatcher, event, allHumidityEvent);
+    }
+
+    public mqttConnectionEvent(event: HumidityEvent) {
+        let thingyId = event.thingyId;
+        let eventDispatcher: SimpleEventDispatcher<HumidityEvent> = this.getThingyNotifyEvent(thingyId).humidityEvent;
+        let allHumidityEvent = this.allThingyEvents.humidityEvent;
+        this.dispatchThingyEvents(thingyId, eventDispatcher, event, allHumidityEvent);
     }
 
     public fireAirQualityEvent(event: AirQualityEvent) {
         let thingyId = event.thingyId;
         let eventDispatcher: SimpleEventDispatcher<AirQualityEvent> = this.getThingyNotifyEvent(thingyId).airQualityEvent;
         let allairQualityEvent = this.allThingyEvents.airQualityEvent;
-        this.dispatchEvents(thingyId, eventDispatcher, event, allairQualityEvent);
+        this.dispatchThingyEvents(thingyId, eventDispatcher, event, allairQualityEvent);
     }
 
-    private dispatchEvents(source: string, eventDispatcher: SimpleEventDispatcher<AirQualityEvent>, event: AirQualityEvent, allairQualityEvent: SimpleEventDispatcher<ThingyDataEvent>) {
+    private dispatchThingyEvents(source: string, eventDispatcher: SimpleEventDispatcher<AirQualityEvent>, event: AirQualityEvent, allairQualityEvent: SimpleEventDispatcher<ThingyDataEvent>) {
         eventDispatcher.dispatchAsync(event);
         allairQualityEvent.dispatchAsync(event);
     }
@@ -89,7 +98,14 @@ export class EventBus {
         let thingyId = event.thingyId;
         let eventDispatcher: SimpleEventDispatcher<PressureEvent> = this.getThingyNotifyEvent(thingyId).pressureEvent;
         let allEvent = this.allThingyEvents.pressureEvent;
-        this.dispatchEvents(thingyId, eventDispatcher, event, allEvent);
+        this.dispatchThingyEvents(thingyId, eventDispatcher, event, allEvent);
     }
 
+    public fireMqttConnectionEvent(mqttConnectionEvent: MqttConnectionEvent) {
+        this.mqttEventDispatcher.dispatchAsync(mqttConnectionEvent);
+    }
+
+    subscribeToMqtt(mqttUpdate: ISimpleEventHandler<MqttConnectionEvent>) {
+        this.mqttEventDispatcher.subscribe(mqttUpdate);
+    }
 }

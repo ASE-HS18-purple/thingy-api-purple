@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import {EventBus} from './EventBus';
-import {AirQualityEvent, HumidityEvent, PressureEvent, TemperatureEvent} from './ThingyNotifyEvents';
+import {AirQualityEvent, HumidityEvent, PressureEvent, TemperatureEvent} from './ThingyNotifyEventDispatchers';
 import * as Sinon from 'sinon';
 
 describe('Eventbus', () => {

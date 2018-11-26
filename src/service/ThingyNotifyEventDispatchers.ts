@@ -19,7 +19,7 @@ class AirQualityEvent extends ThingyDataEvent{}
 class PressureEvent extends ThingyDataEvent{}
 
 
-class ThingyNotifyEvents {
+class ThingyNotifyEventDispatchers {
 
     readonly temperatureEvent = new SimpleEventDispatcher<TemperatureEvent>();
     readonly humidityEvent = new SimpleEventDispatcher<HumidityEvent>();
@@ -28,4 +28,4 @@ class ThingyNotifyEvents {
 
 }
 
-export {ThingyNotifyEvents, ThingyDataEvent, TemperatureEvent, HumidityEvent, AirQualityEvent, PressureEvent}
+export {ThingyNotifyEventDispatchers, ThingyDataEvent, TemperatureEvent, HumidityEvent, AirQualityEvent, PressureEvent}

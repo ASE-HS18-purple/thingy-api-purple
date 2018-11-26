@@ -61,6 +61,7 @@ class App {
         app.use(router.routes());
         this.server = await app.listen(this.config.serverConfig.SERVER_PORT);
         this.websocketController = new WebsocketController(this.server, this.thingyQueryService, this.eventbus);
+        this.mqttConnection.initConnection();
         console.log(`App is up and running and listening to port: ${this.config.serverConfig.SERVER_PORT}`);
         console.log('Initiating database connection');
     };
@@ -76,7 +77,7 @@ class App {
         const influxDbConfig = this.config.influxDatabaseCfg;
         this.thingyQueryService = new ThingyQueryService();
         this.userQueryService = new UserQueryService();
-        this.mqttConnection = new MqttConnection(mqttConfig.mqtt, mqttConfig.port, mqttConfig.username, mqttConfig.password);
+        this.mqttConnection = new MqttConnection(mqttConfig.mqtt, mqttConfig.port, mqttConfig.username, mqttConfig.password, this.eventbus);
         this.mongoDatabaseConnection = new MongoDatabaseConnection(mongoDbConfig.DATABASE_URL, mongoDbConfig.DATABASE_NAME);
         this.influxDatabaseConnection = new InfluxDatabaseConnection(influxDbConfig.DATABASE_URL, influxDbConfig.DATABASE_NAME);
         this.authenticationService = new AuthenticationService(this.config.serverConfig.PUBLIC_APIS);
@@ -84,7 +85,6 @@ class App {
         this.environmentalDataQueryService = new EnvironmentalDataQueryService(this.influxDatabaseConnection);
         this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataQueryService, this.environmentalDataParserService, this.eventbus);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
-        this.mqttConnection.initConnection();
         this.mqttService.initSubscriptionToMqtt();
         this.mongoDatabaseConnection.connect();
         this.influxDatabaseConnection.connect();
