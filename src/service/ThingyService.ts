@@ -28,7 +28,7 @@ export class ThingyService {
                 deviceId: deviceId,
                 location: location,
             }));
-            this.mqttService.subscribe(configuredThingy.deviceId);
+            this.mqttService.subscribe(configuredThingy.deviceId, configuredThingy.id);
         }
         return configuredThingy;
     };
@@ -56,7 +56,7 @@ export class ThingyService {
             }
             // If we are here, it means that the device id and name are unique per user.
             updatedThingy = await this.thingyQuerier.updateThingyDevice(thingyModel);
-            this.mqttService.subscribe(updatedThingy.id);
+            this.mqttService.subscribe(updatedThingy.id, updatedThingy.id);
         }
         return updatedThingy;
     }
