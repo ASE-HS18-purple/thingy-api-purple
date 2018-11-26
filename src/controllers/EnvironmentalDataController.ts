@@ -25,27 +25,30 @@ export class EnvironmentalDataController extends BaseController {
 
     getTemperatureData = async (ctx: Router.IRouterContext) => {
         const environmentalData: EnvironmentalData = await this.getEnvironmentalData(ctx, 'Temperature');
-        this.settleTheResponse(ctx, environmentalData);
+        this.settleTheResponse(ctx, environmentalData, 200, 400);
     };
 
     getHumidityData = async (ctx: Router.IRouterContext) => {
         const environmentalData: EnvironmentalData = await this.getEnvironmentalData(ctx, 'Pressure');
-        this.settleTheResponse(ctx, environmentalData);
+        this.settleTheResponse(ctx, environmentalData, 200, 400);
     };
 
     getPressureData = async (ctx: Router.IRouterContext) => {
         const environmentalData: EnvironmentalData = await this.getEnvironmentalData(ctx, 'Humidity');
-        this.settleTheResponse(ctx, environmentalData);
+        this.settleTheResponse(ctx, environmentalData, 200, 400);
     };
 
     getAirQualityData = async (ctx: Router.IRouterContext) => {
         const environmentalData: EnvironmentalData = await this.getEnvironmentalData(ctx, 'CO2');
-        this.settleTheResponse(ctx, environmentalData);
+        this.settleTheResponse(ctx, environmentalData, 200, 400);
     };
 
     private getEnvironmentalData = async (ctx: Router.IRouterContext, unit: string) => {
-        const from: number = ctx.query.from;
-        const to: number = ctx.query.to;
+        let from: number = ctx.query.from;
+        let to: number = ctx.query.to;
+        if (isNaN(from) || isNaN(to)) {
+            return null;
+        }
         const username = ctx.state.user.user.username;
         const environmentalData: EnvironmentalData = new EnvironmentalData();
         environmentalData.datasets = [];
@@ -65,7 +68,7 @@ export class EnvironmentalDataController extends BaseController {
             if (unit == 'CO2') {
                 res = await this.environmentalDataQueryService.getAirQualityData(from, to, thingyDevice._id);
             }
-            let dataset = {id: thingyDevice._id, thingyName: thingyDevice.location, properties: new Array()};
+            let dataset = {id: thingyDevice._id, thingyName: thingyDevice.name, properties: new Array()};
             res.forEach(entry => {
                 let tempVal = {value: (entry as any).value, time: (entry as any).time};
                 dataset.properties.push({value: (entry as any).value, time: (entry as any).time});
@@ -75,9 +78,9 @@ export class EnvironmentalDataController extends BaseController {
         return environmentalData;
     };
 
-    private settleTheResponse = (ctx: Router.IRouterContext, environmentalData: EnvironmentalData) => {
-        ctx.response.status = 200;
+    private settleTheResponse = (ctx: Router.IRouterContext, environmentalData: EnvironmentalData, successCode: number, failCode: number) => {
         ctx.response.body = environmentalData;
+        ctx.response.status = environmentalData ? successCode : failCode;
     };
 
 }

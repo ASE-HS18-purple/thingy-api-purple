@@ -14,26 +14,13 @@ export class ThingyQueryService {
         return await Thingy.find({});
     }
 
-    public async findThingByUsernameAndLocation(username: string, location: string): Promise<IThingy> {
-        const thingy = await Thingy.findOne({
-            username: username,
-            location: location,
+    public async updateThingyDevice(thingy: IThingy) {
+        await Thingy.updateOne({_id: thingy.id}, {
+            deviceId: thingy.deviceId,
+            name: thingy.name,
+            location: thingy.location,
         });
-        return thingy;
-    }
-
-    public async updateThingyDeviceByLocationId(id: string, deviceId: any, username: string) {
-        // Try to search by the location id coming from client.
-        const thingyDevice = await Thingy.findById(id);
-        if (thingyDevice) {
-            // If the device is found, check if it belongs to the user who did the request.
-            if ((thingyDevice as any).username == username) {
-                await Thingy.updateOne({_id: id}, {
-                    deviceId: deviceId
-                });
-                return await Thingy.findById(id);
-            }
-        }
+        return await Thingy.findById(thingy.id);
     }
 
     public async deleteThingyDevice(id: string, username: string) {
@@ -58,8 +45,19 @@ export class ThingyQueryService {
         }
     }
 
-    public async findThingyDeviceById(deviceId: string) {
+    public async findThingyDeviceByDeviceId(deviceId: string) {
         return Thingy.find({deviceId: deviceId});
     }
 
+    public async findThingyDeviceById(id: string): Promise<IThingy> {
+        return Thingy.findOne({_id: id});
+    }
+
+    public async findThingyDeviceByDeviceIdAndUsername(deviceId: string, username: string): Promise<IThingy> {
+        return Thingy.findOne({deviceId: deviceId, username: username});
+    }
+
+    public async findThingyByNameAndUsername(name: string, username: string): Promise<IThingy> {
+        return Thingy.findOne({name: name, username: username});
+    }
 }

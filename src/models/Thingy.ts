@@ -1,15 +1,17 @@
 import * as mongoose from 'mongoose';
 
 interface IThingy extends mongoose.Document {
-    location: string,
+    name: string,
     username: string,
-    deviceId: string
+    deviceId: string,
+    location: string
 }
 
 const ThingySchema = new mongoose.Schema({
-    location: String,
+    name: String,
     username: String,
     deviceId: String,
+    location: String,
 });
 
 ThingySchema.set('toJSON', {

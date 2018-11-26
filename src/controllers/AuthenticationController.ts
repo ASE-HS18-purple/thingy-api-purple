@@ -27,7 +27,7 @@ export class AuthenticationController extends BaseController {
         const password: string = requestBody.password;
         // Search the user based on email and (if necessary) username.
         const user: IUser = await this.searchUser(usernameOrEmail);
-        // If the user is not found or password is not correct 403 status code.
+        // If the user is not found or password is not correct 403 state code.
         if (!user) ctx.throw('Unknown username or email', 401);
         if (password !== user.password) ctx.throw('The password is not correct!', 401);
         // Read the secret key and generate token.
