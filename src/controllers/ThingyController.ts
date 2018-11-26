@@ -5,6 +5,10 @@ import {ThingyService} from '../service/ThingyService';
 import {IThingy} from '../models/Thingy';
 import {MqttService} from '../service/MqttService';
 
+export interface ThingyWithUpdates extends IThingy {
+    _doc: any; //<- from mongoose
+}
+
 export class ThingyController extends BaseController {
 
     private thingyQuerier: ThingyQueryService;
@@ -22,6 +26,7 @@ export class ThingyController extends BaseController {
     getRoutes(router: Router): Router {
         router.post('/', this.addThingy);
         router.get('/', this.getAllThingys);
+        router.get('/withUpdates', this.getAllThingysWithUpdates);
         router.put('/:id', this.editThingy);
         router.get('/:id', this.getThingy);
         router.delete('/:id', this.deleteThingy);
@@ -39,6 +44,15 @@ export class ThingyController extends BaseController {
     getAllThingys = async (ctx: Router.IRouterContext) => {
         const username = ctx.state.user.user.username;
         ctx.response.body = await this.thingyQuerier.findAllThingyDevicesByUsername(username);
+        ctx.response.status = 201;
+    };
+
+    getAllThingysWithUpdates = async (ctx: Router.IRouterContext) => {
+        const username = ctx.state.user.user.username;
+        let thingys = await this.thingyQuerier.findAllThingyDevicesByUsername(username);
+        // TODO: Enhance it with last values, either manually or implement in service
+        thingys.forEach(thingy => (<ThingyWithUpdates> thingy)._doc.properties = []);
+        ctx.response.body = thingys;
         ctx.response.status = 201;
     };
 
