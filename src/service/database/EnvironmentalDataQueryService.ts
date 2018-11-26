@@ -1,6 +1,7 @@
 import {InfluxDatabaseConnection} from './InfluxDatabaseConnection';
 import {EventBus} from '../EventBus';
 import {ThingyDataEvent} from '../ThingyNotifyEventDispatchers';
+import {ThingyQueryService} from './ThingyQueryService';
 
 export enum Measurement {
     Temperature = 'temperature',
@@ -18,13 +19,27 @@ export enum AggregatedMeasurment {
 
 export class EnvironmentalDataQueryService {
 
-    private influxDatabase: InfluxDatabaseConnection;
-    private eventbus: EventBus;
+    private knownConfigurationIdsByThingyId: Map<string, string[]>;
 
-    constructor(influxDatabaseService: InfluxDatabaseConnection, eventbus: EventBus) {
-        this.influxDatabase = influxDatabaseService;
-        this.eventbus = eventbus;
+    constructor(private influxDatabase: InfluxDatabaseConnection, private eventbus: EventBus, private thingyQueryService: ThingyQueryService) {
         this.initSubscriptions();
+        this.knownConfigurationIdsByThingyId = new Map();
+        this.loadConfigurationIds();
+    }
+
+    private async loadConfigurationIds() {
+        let thingys = await this.thingyQueryService.findAllThingyDevices();
+        console.log(thingys);
+        for (let thingy of thingys) {
+            let deviceId = thingy.deviceId;
+            let configurationId = thingy.id;
+            let configurationIds = this.knownConfigurationIdsByThingyId.get(deviceId);
+            if (!configurationIds) {
+                configurationIds = [];
+            }
+            configurationIds.push(configurationId);
+            this.knownConfigurationIdsByThingyId.set(deviceId, configurationIds);
+        }
     }
 
     public initSubscriptions() {
@@ -36,7 +51,19 @@ export class EnvironmentalDataQueryService {
 
     private storeMeasurement(property: Measurement) {
         return async (thingyData: ThingyDataEvent) => {
-            this.storeEnvData(thingyData.thingyId, thingyData.value, property);
+            let configurationIds = this.knownConfigurationIdsByThingyId.get(thingyData.thingyId);
+            console.log("Thisi");
+            console.log(thingyData.thingyId);
+            console.log(configurationIds);
+            if (!configurationIds) {
+                this.loadConfigurationIds();
+                configurationIds = this.knownConfigurationIdsByThingyId.get(thingyData.thingyId);
+            }
+            for (let configurationId in configurationIds) {
+                console.log('Storing with');
+                console.log(configurationId);
+                this.storeEnvData(configurationId, thingyData.value, property);
+            }
         }
     }
 
