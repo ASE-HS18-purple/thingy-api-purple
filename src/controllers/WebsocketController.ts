@@ -39,7 +39,7 @@ export class WebsocketController {
             let thingys = await this.thingyQueryService.findAllThingyDevicesByUsername(userName);
             this.sockets.set(userName, socket);
             for (let thingy of thingys) {
-                let thingyId = thingy.deviceId;
+                let thingyId = thingy.id;
                 this.eventbus.subscribeToAirQuality(this.dataAvailableHandler(socket, JSONProperty.AIRQUALITY), thingyId);
                 this.eventbus.subscribeToTemperature(this.dataAvailableHandler(socket, JSONProperty.TEMPERATURE), thingyId);
                 this.eventbus.subscribeToPressure(this.dataAvailableHandler(socket, JSONProperty.PRESSURE), thingyId);

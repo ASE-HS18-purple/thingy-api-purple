@@ -34,7 +34,7 @@ export class ThingyService {
             });
             configuredThingy = await Thingy.findOne({_id: id});
         }
-        this.mqttService.subscribe(configuredThingy.deviceId);
+        this.mqttService.subscribe(configuredThingy.deviceId, configuredThingy.id);
         return configuredThingy;
     };
 

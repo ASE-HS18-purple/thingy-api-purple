@@ -82,7 +82,7 @@ class App {
         this.influxDatabaseConnection = new InfluxDatabaseConnection(influxDbConfig.DATABASE_URL, influxDbConfig.DATABASE_NAME);
         this.authenticationService = new AuthenticationService(this.config.serverConfig.PUBLIC_APIS);
         this.environmentalDataParserService = new EnvironmentalDataParserService();
-        this.environmentalDataQueryService = new EnvironmentalDataQueryService(this.influxDatabaseConnection);
+        this.environmentalDataQueryService = new EnvironmentalDataQueryService(this.influxDatabaseConnection, this.eventbus);
         this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataQueryService, this.environmentalDataParserService, this.eventbus);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
         this.mqttService.initSubscriptionToMqtt();
