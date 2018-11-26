@@ -1,4 +1,4 @@
-import {SimpleEventDispatcher, ISimpleEvent, ISimpleEventHandler} from 'strongly-typed-events';
+import {SimpleEventDispatcher, ISimpleEventHandler} from 'strongly-typed-events';
 import {AirQualityEvent, HumidityEvent, PressureEvent, TemperatureEvent, ThingyDataEvent, ThingyNotifyEventDispatchers} from './ThingyNotifyEventDispatchers';
 import {MqttConnectionEvent} from './MqttConnection';
 
@@ -75,13 +75,6 @@ export class EventBus {
         this.dispatchThingyEvents(thingyId, eventDispatcher, event, allHumidityEvent);
     }
 
-    public mqttConnectionEvent(event: HumidityEvent) {
-        let thingyId = event.thingyId;
-        let eventDispatcher: SimpleEventDispatcher<HumidityEvent> = this.getThingyNotifyEvent(thingyId).humidityEvent;
-        let allHumidityEvent = this.allThingyEvents.humidityEvent;
-        this.dispatchThingyEvents(thingyId, eventDispatcher, event, allHumidityEvent);
-    }
-
     public fireAirQualityEvent(event: AirQualityEvent) {
         let thingyId = event.thingyId;
         let eventDispatcher: SimpleEventDispatcher<AirQualityEvent> = this.getThingyNotifyEvent(thingyId).airQualityEvent;
@@ -107,5 +100,9 @@ export class EventBus {
 
     subscribeToMqtt(mqttUpdate: ISimpleEventHandler<MqttConnectionEvent>) {
         this.mqttEventDispatcher.subscribe(mqttUpdate);
+    }
+
+    public unsubscribeToMqtt(handler: ISimpleEventHandler<MqttConnectionEvent>) {
+        this.mqttEventDispatcher.unsubscribe(handler);
     }
 }

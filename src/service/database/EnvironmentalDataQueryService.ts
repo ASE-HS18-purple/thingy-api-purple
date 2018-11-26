@@ -17,7 +17,7 @@ export class EnvironmentalDataQueryService {
     constructor(influxDatabaseService: InfluxDatabaseConnection, eventbus: EventBus) {
         this.influxDatabase = influxDatabaseService;
         this.eventbus = eventbus;
-        this.initSubscriptions();
+        // this.initSubscriptions();
     }
 
     public initSubscriptions() {
