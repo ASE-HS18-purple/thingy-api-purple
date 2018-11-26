@@ -64,8 +64,8 @@ export class EnvironmentalDataQueryService {
 
 
     private async queryEnvData(from: number, to: number, configId: string, measurement: Measurement) {
-        const fromDate = new Date(from).toISOString();
-        const toDate = new Date(to).toISOString();
+        const fromDate = new Date(Number(from)).toISOString();
+        const toDate = new Date(Number(to)).toISOString();
         const query = ` SELECT time, value FROM ${measurement} WHERE configId = '${configId}' AND time > '${fromDate}' AND time < '${toDate}'`;
         const data = this.influxDatabase.getInFluxDbClient().query(query);
         return data;
