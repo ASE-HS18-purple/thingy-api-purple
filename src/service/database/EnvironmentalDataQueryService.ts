@@ -77,6 +77,29 @@ export class EnvironmentalDataQueryService {
         const data = this.influxDatabase.getInFluxDbClient().query(query);
         return data;
     }
+
+    public async getTemperatureLastStoredProperty(configId: string) {
+        return await this.getLastStoredProperty(configId, Measurement.Temperature);
+    }
+
+    public async getHumidityLastStoredProperty(configId: string) {
+        return await this.getLastStoredProperty(configId, Measurement.Humidity);
+    }
+
+    public async getPressureLastStoredProperty(configId: string) {
+        return await this.getLastStoredProperty(configId, Measurement.Pressure);
+    }
+
+    public async getCo2LastStoredProperty(configId: string) {
+        return await this.getLastStoredProperty(configId, Measurement.CO2);
+    }
+
+    private async getLastStoredProperty(configId: string, measurement: Measurement) {
+        const query = ` SELECT time, value FROM ${measurement} WHERE configId = '${configId}' LIMIT 1`;
+        const data = this.influxDatabase.getInFluxDbClient().query(query);
+        return data;
+    }
+
 }
 
 export class EnvironmentalData {
