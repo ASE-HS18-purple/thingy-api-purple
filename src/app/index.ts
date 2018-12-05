@@ -75,7 +75,6 @@ class App {
         let mqttConfig = this.config.mqttConfig;
         let mongoDbConfig = this.config.mongoDatabaseCfg;
         const influxDbConfig = this.config.influxDatabaseCfg;
-        this.thingyQueryService = new ThingyQueryService();
         this.userQueryService = new UserQueryService();
         this.mqttConnection = new MqttConnection(mqttConfig.mqtt, mqttConfig.port, mqttConfig.username, mqttConfig.password, this.eventbus);
         this.mongoDatabaseConnection = new MongoDatabaseConnection(mongoDbConfig.DATABASE_URL, mongoDbConfig.DATABASE_NAME);
@@ -83,6 +82,7 @@ class App {
         this.authenticationService = new AuthenticationService(this.config.serverConfig.PUBLIC_APIS);
         this.environmentalDataParserService = new EnvironmentalDataParserService();
         this.environmentalDataQueryService = new EnvironmentalDataQueryService(this.influxDatabaseConnection, this.eventbus);
+        this.thingyQueryService = new ThingyQueryService(this.environmentalDataQueryService);
         this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataQueryService, this.environmentalDataParserService, this.eventbus);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
         this.mqttService.initSubscriptionToMqtt();
