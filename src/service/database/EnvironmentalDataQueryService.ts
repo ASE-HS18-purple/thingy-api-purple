@@ -95,7 +95,7 @@ export class EnvironmentalDataQueryService {
     }
 
     private async getLastStoredProperty(configId: string, measurement: Measurement) {
-        const query = ` SELECT time, value FROM ${measurement} WHERE configId = '${configId}' LIMIT 1`;
+        const query = ` SELECT time, value FROM ${measurement} WHERE configId = '${configId}' ORDER BY DESC LIMIT 1`;
         const data = this.influxDatabase.getInFluxDbClient().query(query);
         return data;
     }
