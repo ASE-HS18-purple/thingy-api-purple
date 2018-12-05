@@ -8,7 +8,7 @@ import {ISimpleEventHandler} from 'strongly-typed-events';
 
 
 export enum JSONProperty {
-    AIRQUALITY, TEMPERATURE, PRESSURE, HUMIDITY, MQTT
+    CO2, Temperature, Pressure, Humidity, Mqtt,
 }
 
 export class WebsocketController {
@@ -35,7 +35,7 @@ export class WebsocketController {
         socket.on('close', this.onClose(socket).bind(this));
         if (this.lastMqttEvent) {
             socket.send(JSON.stringify({
-                property: JSONProperty.MQTT,
+                property: JSONProperty.Mqtt,
                 ...this.lastMqttEvent
             }));
         }
@@ -48,19 +48,19 @@ export class WebsocketController {
                 let thingyId = key[0];
                 let property = key[1];
                 switch (property) {
-                    case JSONProperty.MQTT:
+                    case JSONProperty.Mqtt:
                         this.eventbus.unsubscribeToMqtt(value);
                         break;
-                    case JSONProperty.AIRQUALITY:
+                    case JSONProperty.CO2:
                         this.eventbus.unsubscribeToAirQuality(value, thingyId);
                         break;
-                    case JSONProperty.HUMIDITY:
+                    case JSONProperty.Humidity:
                         this.eventbus.unsubscribeToHumidity(value, thingyId);
                         break;
-                    case JSONProperty.PRESSURE:
+                    case JSONProperty.Pressure:
                         this.eventbus.unsubscribeToPressure(value, thingyId);
                         break;
-                    case JSONProperty.TEMPERATURE:
+                    case JSONProperty.Temperature:
                         this.eventbus.unsubscribeToTemperature(value, thingyId);
                         break;
                 }
@@ -76,11 +76,11 @@ export class WebsocketController {
             this.sockets.set(userName, socket);
             for (let thingy of thingys) {
                 let thingyId = thingy.id;
-                this.eventbus.subscribeToAirQuality(this.createAndRegisterHandler(socket, JSONProperty.AIRQUALITY, thingyId), thingyId);
-                this.eventbus.subscribeToTemperature(this.createAndRegisterHandler(socket, JSONProperty.TEMPERATURE, thingyId), thingyId);
-                this.eventbus.subscribeToPressure(this.createAndRegisterHandler(socket, JSONProperty.PRESSURE, thingyId), thingyId);
-                this.eventbus.subscribeToHumidity(this.createAndRegisterHandler(socket, JSONProperty.HUMIDITY, thingyId), thingyId);
-                this.eventbus.subscribeToMqtt(this.createAndRegisterHandler(socket, JSONProperty.MQTT, thingyId));
+                this.eventbus.subscribeToAirQuality(this.createAndRegisterHandler(socket, JSONProperty.CO2, thingyId), thingyId);
+                this.eventbus.subscribeToTemperature(this.createAndRegisterHandler(socket, JSONProperty.Temperature, thingyId), thingyId);
+                this.eventbus.subscribeToPressure(this.createAndRegisterHandler(socket, JSONProperty.Pressure, thingyId), thingyId);
+                this.eventbus.subscribeToHumidity(this.createAndRegisterHandler(socket, JSONProperty.Humidity, thingyId), thingyId);
+                this.eventbus.subscribeToMqtt(this.createAndRegisterHandler(socket, JSONProperty.Mqtt, thingyId));
             }
         };
     }
