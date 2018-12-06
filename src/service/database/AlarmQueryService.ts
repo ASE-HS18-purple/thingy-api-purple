@@ -1,0 +1,15 @@
+import {Alarm, IAlarm} from "../../models/Alarm";
+
+export class AlarmQueryService {
+
+    public async createAlarm(alarm: IAlarm, username: string): Promise<IAlarm> {
+        return await Alarm.create({
+            name: alarm.name,
+            username: username,
+            triggered: alarm.triggered,
+            triggerTime: alarm.triggerTime,
+            isOn: alarm.isOn,
+        });
+    }
+
+}

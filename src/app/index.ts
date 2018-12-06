@@ -24,6 +24,9 @@ import {EnvironmentalDataController} from '../controllers/EnvironmentalDataContr
 import {WebsocketController} from '../controllers/WebsocketController';
 import {Server} from 'http';
 import {EventBus} from '../service/EventBus';
+import {AlarmService} from "../service/AlarmService";
+import {AlarmQueryService} from "../service/database/AlarmQueryService";
+import {AlarmController} from "../controllers/AlarmController";
 
 
 class App {
@@ -37,6 +40,8 @@ class App {
     private userQueryService: UserQueryService;
     private thingyQueryService: ThingyQueryService;
     private environmentalDataQueryService: EnvironmentalDataQueryService;
+    private alarmQueryService: AlarmQueryService;
+    private alarmService: AlarmService;
     private config: Configuration.Loader;
     private mqttConnection: MqttConnection;
     private server: Server;
@@ -83,6 +88,8 @@ class App {
         this.environmentalDataParserService = new EnvironmentalDataParserService();
         this.environmentalDataQueryService = new EnvironmentalDataQueryService(this.influxDatabaseConnection, this.eventbus);
         this.thingyQueryService = new ThingyQueryService(this.environmentalDataQueryService);
+        this.alarmQueryService = new AlarmQueryService();
+        this.alarmService = new AlarmService(this.alarmQueryService);
         this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataQueryService, this.environmentalDataParserService, this.eventbus);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
         this.mqttService.initSubscriptionToMqtt();
@@ -96,7 +103,8 @@ class App {
             new MqttController(this.mqttConnection),
             new ThingyController(this.thingyQueryService, this.thingyService, this.mqttService),
             new UserController(this.userQueryService),
-            new EnvironmentalDataController(this.environmentalDataQueryService, this.thingyQueryService));
+            new EnvironmentalDataController(this.environmentalDataQueryService, this.thingyQueryService),
+            new AlarmController(this.alarmService));
         let router: Router = new Router();
         for (let controller of this.controllers) {
             controller.routes(router);
