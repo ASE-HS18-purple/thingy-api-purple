@@ -1,4 +1,4 @@
-import {Alarm, IAlarm} from "../../models/Alarm";
+import {Alarm, IAlarm} from '../../models/Alarm';
 
 export class AlarmQueryService {
 
@@ -12,4 +12,7 @@ export class AlarmQueryService {
         });
     }
 
+    public async getAllAlarms(username: string): Promise<IAlarm[]> {
+        return await Alarm.find({username: username});
+    }
 }

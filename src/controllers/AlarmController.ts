@@ -14,7 +14,8 @@ export class AlarmController extends BaseController {
     }
 
     protected getRoutes(router: Router): Router {
-        router.post('/simple', this.configureAlarm);
+        router.post('/', this.configureAlarm);
+        router.get('/', this.getAllAlarms);
         return router;
     }
 
@@ -24,6 +25,13 @@ export class AlarmController extends BaseController {
         const configuredAlarm = await this.alarmService.configureAlarm(alarm, username);
         ctx.response.body = configuredAlarm;
         ctx.response.status = configuredAlarm ? 200 : 400;
+    }
+
+    private getAllAlarms = async (ctx: Router.IRouterContext) => {
+        const username = ctx.state.user.user.username;
+        const alarms = await this.alarmService.getAllAlarms(username);
+        ctx.response.body = alarms;
+        ctx.response.status = 200;
     }
 
 }

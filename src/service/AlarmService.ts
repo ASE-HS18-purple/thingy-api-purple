@@ -23,6 +23,10 @@ export class AlarmService {
         }
     }
 
+    public async getAllAlarms(username: string) {
+        return await this.alarmQueryService.getAllAlarms(username);
+    }
+
     private createTimer(alarm: IAlarm) {
         const now = new Date().getTime();
         const triggerTime = alarm.triggerTime;
