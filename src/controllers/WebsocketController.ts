@@ -5,10 +5,11 @@ import {EventBus} from '../service/EventBus';
 import {ThingyDataEvent} from '../service/ThingyNotifyEventDispatchers';
 import {MqttConnectionEvent} from '../service/MqttConnection';
 import {ISimpleEventHandler} from 'strongly-typed-events';
+import {AlarmEvent} from "../service/AlarmService";
 
 
 export enum DataType {
-    CO2, Temperature, Pressure, Humidity, Mqtt,
+    CO2, Temperature, Pressure, Humidity, Mqtt, Alarm,
 }
 
 export class WebsocketController {
@@ -43,7 +44,7 @@ export class WebsocketController {
 
     private onClose(socket: WebSocket) {
         return () => {
-            const socketHandlers: Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent>> = this.handlers.get(socket);
+            const socketHandlers: Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent | AlarmEvent>> = this.handlers.get(socket);
             socketHandlers.forEach((value, key) => {
                 const thingyId = key[0];
                 const property = key[1];
@@ -63,6 +64,9 @@ export class WebsocketController {
                     case DataType.Temperature:
                         this.eventbus.unsubscribeToTemperature(value, thingyId);
                         break;
+                    case DataType.Alarm:
+                        this.eventbus.unsubscribeToAlarm(value);
+                        break;
                 }
             });
             this.handlers.delete(socket);
@@ -75,19 +79,20 @@ export class WebsocketController {
             const thingys = await this.thingyQueryService.findAllThingyDevicesByUsername(userName);
             this.sockets.set(userName, socket);
             for (let thingy of thingys) {
-                let thingyId = thingy.id;
+                const thingyId = thingy.id;
                 this.eventbus.subscribeToAirQuality(this.createAndRegisterHandler(socket, DataType.CO2, thingyId), thingyId);
                 this.eventbus.subscribeToTemperature(this.createAndRegisterHandler(socket, DataType.Temperature, thingyId), thingyId);
                 this.eventbus.subscribeToPressure(this.createAndRegisterHandler(socket, DataType.Pressure, thingyId), thingyId);
                 this.eventbus.subscribeToHumidity(this.createAndRegisterHandler(socket, DataType.Humidity, thingyId), thingyId);
                 this.eventbus.subscribeToMqtt(this.createAndRegisterHandler(socket, DataType.Mqtt, thingyId));
+                this.eventbus.subscribeToAlarm(this.createAndRegisterHandler(socket, DataType.Alarm, thingyId));
             }
         };
     }
 
     private createAndRegisterHandler(websocket: WebSocket, property: DataType, thingyId: string) {
         let handlers = this.handlers.get(websocket);
-        let handler: ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent> = async (data: ThingyDataEvent | MqttConnectionEvent) => {
+        let handler: ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent | AlarmEvent> = async (data: ThingyDataEvent | MqttConnectionEvent | AlarmEvent) => {
             websocket.send(JSON.stringify({
                 property: property,
                 ...data

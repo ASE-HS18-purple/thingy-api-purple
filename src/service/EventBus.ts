@@ -1,12 +1,21 @@
 import {SimpleEventDispatcher, ISimpleEventHandler} from 'strongly-typed-events';
-import {AirQualityEvent, HumidityEvent, PressureEvent, TemperatureEvent, ThingyDataEvent, ThingyNotifyEventDispatchers} from './ThingyNotifyEventDispatchers';
+import {
+    AirQualityEvent,
+    HumidityEvent,
+    PressureEvent,
+    TemperatureEvent,
+    ThingyDataEvent,
+    ThingyNotifyEventDispatchers
+} from './ThingyNotifyEventDispatchers';
 import {MqttConnectionEvent} from './MqttConnection';
+import {AlarmActive, AlarmEvent} from "./AlarmService";
 
 export class EventBus {
 
     private specificThingyEvents: Map<string, ThingyNotifyEventDispatchers> = new Map<string, ThingyNotifyEventDispatchers>();
     private allThingyEvents: ThingyNotifyEventDispatchers = new ThingyNotifyEventDispatchers();
     private mqttEventDispatcher: SimpleEventDispatcher<MqttConnectionEvent> = new SimpleEventDispatcher<MqttConnectionEvent>();
+    private alarmEventDispatcher: SimpleEventDispatcher<AlarmEvent> = new SimpleEventDispatcher<AlarmEvent>();
 
     private createThingyEventsIfNotExisting(thingyId: string) {
         if (!this.specificThingyEvents.has(thingyId)) {
@@ -105,4 +114,17 @@ export class EventBus {
     public unsubscribeToMqtt(handler: ISimpleEventHandler<MqttConnectionEvent>) {
         this.mqttEventDispatcher.unsubscribe(handler);
     }
+
+    public fireAlarmEvent(alarmEvent: AlarmEvent) {
+        this.alarmEventDispatcher.dispatchAsync(alarmEvent);
+    }
+
+    public subscribeToAlarm(handler: ISimpleEventHandler<AlarmEvent>) {
+        this.alarmEventDispatcher.subscribe(handler);
+    }
+
+    public unsubscribeToAlarm(handler: ISimpleEventHandler<AlarmEvent>) {
+        this.alarmEventDispatcher.unsubscribe(handler);
+    }
+
 }

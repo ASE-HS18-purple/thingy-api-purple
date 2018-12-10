@@ -89,7 +89,7 @@ class App {
         this.environmentalDataQueryService = new EnvironmentalDataQueryService(this.influxDatabaseConnection, this.eventbus);
         this.thingyQueryService = new ThingyQueryService(this.environmentalDataQueryService);
         this.alarmQueryService = new AlarmQueryService();
-        this.alarmService = new AlarmService(this.alarmQueryService);
+        this.alarmService = new AlarmService(this.alarmQueryService, this.eventbus);
         this.mqttService = new MqttService(this.mqttConnection, this.thingyQueryService, this.environmentalDataQueryService, this.environmentalDataParserService, this.eventbus);
         this.thingyService = new ThingyService(this.thingyQueryService, this.mqttService);
         this.mqttService.initSubscriptionToMqtt();

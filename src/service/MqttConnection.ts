@@ -3,16 +3,16 @@ import {MqttClient} from 'mqtt';
 import {EventBus} from './EventBus';
 
 enum MqttConnectionState {
-    Connected = "Connected",
-    Reconnecting = "Reconnecting",
-    Disconnected = "Disconnected",
-    Error = "Error"
+    Connected = 'Connected',
+    Reconnecting = 'Reconnecting',
+    Disconnected = 'Disconnected',
+    Error = 'Error',
 }
 
 class MqttConnectionEvent {
-    constructor(public timestamp: number, public  mqttState: MqttConnectionState) {}
+    constructor(public timestamp: number, public  mqttState: MqttConnectionState) {
+    }
 }
-
 
 
 class MqttConnection {
