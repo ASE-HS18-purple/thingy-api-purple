@@ -15,4 +15,8 @@ export class AlarmQueryService {
     public async getAllAlarms(username: string): Promise<IAlarm[]> {
         return await Alarm.find({username: username});
     }
+
+    public async updateAlarm(alarm: IAlarm) {
+        return await Alarm.updateOne({_id: alarm.id}, alarm);
+    }
 }

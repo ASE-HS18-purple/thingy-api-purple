@@ -1,6 +1,6 @@
 import {IThingy, Thingy} from '../../models/Thingy';
 import {EnvironmentalDataQueryService} from "./EnvironmentalDataQueryService";
-import {JSONProperty} from "../../controllers/WebsocketController";
+import {DataType} from "../../controllers/WebsocketController";
 
 
 export class ThingyQueryService {
@@ -22,23 +22,23 @@ export class ThingyQueryService {
                 const temp = await this.envDataQuery.getTemperatureLastStoredProperty(thingyDevice._id);
                 // Note: We are querying here only the last item stored. Hence we check and deal with only one element.
                 if (temp[0]) {
-                    thingyDevice.lastValues[JSONProperty.Temperature] = (temp[0] as any).value;
-                    thingyDevice.lastTimes[JSONProperty.Temperature] = new Date((temp[0] as any).time).getTime();
+                    thingyDevice.lastValues[DataType.Temperature] = (temp[0] as any).value;
+                    thingyDevice.lastTimes[DataType.Temperature] = new Date((temp[0] as any).time).getTime();
                 }
                 const humidity = await this.envDataQuery.getHumidityLastStoredProperty(thingyDevice._id);
                 if (humidity[0]) {
-                    thingyDevice.lastValues[JSONProperty.Humidity] = (humidity[0] as any).value;
-                    thingyDevice.lastTimes[JSONProperty.Humidity] = new Date((humidity[0] as any).time).getTime();
+                    thingyDevice.lastValues[DataType.Humidity] = (humidity[0] as any).value;
+                    thingyDevice.lastTimes[DataType.Humidity] = new Date((humidity[0] as any).time).getTime();
                 }
                 const pressure = await this.envDataQuery.getPressureLastStoredProperty(thingyDevice._id);
                 if (pressure[0]) {
-                    thingyDevice.lastValues[JSONProperty.Pressure] = (pressure[0] as any).value;
-                    thingyDevice.lastTimes[JSONProperty.Pressure] = new Date((pressure[0] as any).time).getTime();
+                    thingyDevice.lastValues[DataType.Pressure] = (pressure[0] as any).value;
+                    thingyDevice.lastTimes[DataType.Pressure] = new Date((pressure[0] as any).time).getTime();
                 }
                 const co2 = await this.envDataQuery.getCo2LastStoredProperty(thingyDevice._id);
                 if (co2[0]) {
-                    thingyDevice.lastValues[JSONProperty.CO2] = (co2[0] as any).value;
-                    thingyDevice.lastTimes[JSONProperty.CO2] = new Date((co2[0] as any).time).getTime();
+                    thingyDevice.lastValues[DataType.CO2] = (co2[0] as any).value;
+                    thingyDevice.lastTimes[DataType.CO2] = new Date((co2[0] as any).time).getTime();
                 }
             }
         }

@@ -19,7 +19,7 @@ export class ThingyService {
         const location = thingyModel.location;
         const thingyByDeviceId = await this.thingyQuerier.findThingyDeviceByDeviceIdAndUsername(deviceId, username);
         const thingyByName = await this.thingyQuerier.findThingyByNameAndUsername(name, username);
-        //If it is unique by name and by device id, create it!
+        // If it is unique by name and by device id, create it!
         if (!thingyByDeviceId && !thingyByName) {
             // Create one.
             configuredThingy = await Thingy.create(new Thingy({

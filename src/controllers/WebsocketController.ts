@@ -7,7 +7,7 @@ import {MqttConnectionEvent} from '../service/MqttConnection';
 import {ISimpleEventHandler} from 'strongly-typed-events';
 
 
-export enum JSONProperty {
+export enum DataType {
     CO2, Temperature, Pressure, Humidity, Mqtt,
 }
 
@@ -18,11 +18,11 @@ export class WebsocketController {
     private thingyQueryService: ThingyQueryService;
     private eventbus: EventBus;
     private lastMqttEvent: MqttConnectionEvent;
-    private handlers: Map<WebSocket, Map<[string, JSONProperty], ISimpleEventHandler<ThingyDataEvent|MqttConnectionEvent>>>;
+    private handlers: Map<WebSocket, Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent>>>;
 
     constructor(server: Server, thingyQueryService: ThingyQueryService, eventbus: EventBus) {
         this.thingyQueryService = thingyQueryService;
-        this.handlers = new Map<WebSocket, Map<[string, JSONProperty], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent>>>();
+        this.handlers = new Map<WebSocket, Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent>>>();
         this.eventbus = eventbus;
         this.server = new WebSocket.Server({server});
         this.eventbus.subscribeToMqtt(event => this.lastMqttEvent = event);
@@ -30,12 +30,12 @@ export class WebsocketController {
     }
 
     private async onConnection(socket: WebSocket) {
-        this.handlers.set(socket, new Map<[string,JSONProperty], ISimpleEventHandler<ThingyDataEvent|MqttConnectionEvent>>());
+        this.handlers.set(socket, new Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent>>());
         socket.on('message', this.onMessage(socket).bind(this));
         socket.on('close', this.onClose(socket).bind(this));
         if (this.lastMqttEvent) {
             socket.send(JSON.stringify({
-                property: JSONProperty.Mqtt,
+                property: DataType.Mqtt,
                 ...this.lastMqttEvent
             }));
         }
@@ -43,24 +43,24 @@ export class WebsocketController {
 
     private onClose(socket: WebSocket) {
         return () => {
-            let socketHandlers: Map<[string, JSONProperty], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent>> = this.handlers.get(socket);
+            const socketHandlers: Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent>> = this.handlers.get(socket);
             socketHandlers.forEach((value, key) => {
-                let thingyId = key[0];
-                let property = key[1];
+                const thingyId = key[0];
+                const property = key[1];
                 switch (property) {
-                    case JSONProperty.Mqtt:
+                    case DataType.Mqtt:
                         this.eventbus.unsubscribeToMqtt(value);
                         break;
-                    case JSONProperty.CO2:
+                    case DataType.CO2:
                         this.eventbus.unsubscribeToAirQuality(value, thingyId);
                         break;
-                    case JSONProperty.Humidity:
+                    case DataType.Humidity:
                         this.eventbus.unsubscribeToHumidity(value, thingyId);
                         break;
-                    case JSONProperty.Pressure:
+                    case DataType.Pressure:
                         this.eventbus.unsubscribeToPressure(value, thingyId);
                         break;
-                    case JSONProperty.Temperature:
+                    case DataType.Temperature:
                         this.eventbus.unsubscribeToTemperature(value, thingyId);
                         break;
                 }
@@ -71,23 +71,23 @@ export class WebsocketController {
 
     private onMessage(socket: WebSocket) {
         return async (message: string) => {
-            let userName = JSON.parse(message);
-            let thingys = await this.thingyQueryService.findAllThingyDevicesByUsername(userName);
+            const userName = JSON.parse(message);
+            const thingys = await this.thingyQueryService.findAllThingyDevicesByUsername(userName);
             this.sockets.set(userName, socket);
             for (let thingy of thingys) {
                 let thingyId = thingy.id;
-                this.eventbus.subscribeToAirQuality(this.createAndRegisterHandler(socket, JSONProperty.CO2, thingyId), thingyId);
-                this.eventbus.subscribeToTemperature(this.createAndRegisterHandler(socket, JSONProperty.Temperature, thingyId), thingyId);
-                this.eventbus.subscribeToPressure(this.createAndRegisterHandler(socket, JSONProperty.Pressure, thingyId), thingyId);
-                this.eventbus.subscribeToHumidity(this.createAndRegisterHandler(socket, JSONProperty.Humidity, thingyId), thingyId);
-                this.eventbus.subscribeToMqtt(this.createAndRegisterHandler(socket, JSONProperty.Mqtt, thingyId));
+                this.eventbus.subscribeToAirQuality(this.createAndRegisterHandler(socket, DataType.CO2, thingyId), thingyId);
+                this.eventbus.subscribeToTemperature(this.createAndRegisterHandler(socket, DataType.Temperature, thingyId), thingyId);
+                this.eventbus.subscribeToPressure(this.createAndRegisterHandler(socket, DataType.Pressure, thingyId), thingyId);
+                this.eventbus.subscribeToHumidity(this.createAndRegisterHandler(socket, DataType.Humidity, thingyId), thingyId);
+                this.eventbus.subscribeToMqtt(this.createAndRegisterHandler(socket, DataType.Mqtt, thingyId));
             }
         };
     }
 
-    private createAndRegisterHandler(websocket: WebSocket, property: JSONProperty, thingyId: string) {
+    private createAndRegisterHandler(websocket: WebSocket, property: DataType, thingyId: string) {
         let handlers = this.handlers.get(websocket);
-        let handler: ISimpleEventHandler<ThingyDataEvent|MqttConnectionEvent> = async (data: ThingyDataEvent | MqttConnectionEvent) => {
+        let handler: ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent> = async (data: ThingyDataEvent | MqttConnectionEvent) => {
             websocket.send(JSON.stringify({
                 property: property,
                 ...data

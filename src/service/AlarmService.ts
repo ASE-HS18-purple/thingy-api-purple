@@ -17,9 +17,11 @@ export class AlarmService {
             // The alarm cannot be triggered and is not on as soon as it is created.
             alarm.triggered = false;
             alarm.isOn = false;
-            this.createTimer(alarm);
-            return this.checkIfAlarmIsInFutureAtLeast5Seconds(alarm) ?
-                await this.alarmQueryService.createAlarm(alarm, username) : null;
+            if (this.checkIfAlarmIsInFutureAtLeast5Seconds(alarm)) {
+                const createdAlarm: IAlarm = await this.alarmQueryService.createAlarm(alarm, username);
+                this.createTimer(createdAlarm);
+                return createdAlarm;
+            }
         }
     }
 
@@ -31,10 +33,7 @@ export class AlarmService {
         const now = new Date().getTime();
         const triggerTime = alarm.triggerTime;
         const millis = triggerTime - now;
-        console.log(millis);
-        setTimeout(() => {
-            console.log('Will update this method to notify the client to turn on an alarm.', alarm);
-        }, millis) as any;
+        setTimeout(this.sendDataToClientToTriggerAlarm, millis, alarm, this.alarmQueryService);
     }
 
     private checkIfAlarmIsInFutureAtLeast5Seconds(alarm: IAlarm): boolean {
@@ -42,4 +41,11 @@ export class AlarmService {
         const now = new Date().getTime();
         return triggerTime - now > 5;
     }
+
+    private async sendDataToClientToTriggerAlarm(alarm: IAlarm, alarmQueryService: AlarmQueryService) {
+        alarm.isOn = true;
+        alarm.triggered = true;
+        await alarmQueryService.updateAlarm(alarm);
+    }
+
 }
