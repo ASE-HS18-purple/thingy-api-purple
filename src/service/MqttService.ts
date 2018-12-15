@@ -5,7 +5,14 @@ import {ThingyService} from './ThingyService';
 import {ThingyQueryService} from './database/ThingyQueryService';
 import {EnvironmentalDataQueryService} from './database/EnvironmentalDataQueryService';
 import {EventBus} from './EventBus';
-import {AirQualityEvent, HumidityEvent, PressureEvent, TemperatureEvent, ThingyDataEvent, ThingyNotifyEventDispatchers} from './ThingyNotifyEventDispatchers';
+import {
+    AirQualityEvent,
+    HumidityEvent,
+    PressureEvent,
+    TemperatureEvent,
+    ThingyDataEvent,
+    ThingyNotifyEventDispatchers
+} from './ThingyNotifyEventDispatchers';
 
 export class MqttService {
 
@@ -54,6 +61,7 @@ export class MqttService {
         this.mqttConnection.client.subscribe(pressureTopic);
         this.mqttConnection.client.subscribe(humidityTopic);
         this.mqttConnection.client.subscribe(airQualityTopic);
+
         this.setEventHandlers();
     }
 

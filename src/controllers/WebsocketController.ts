@@ -5,8 +5,7 @@ import {EventBus} from '../service/EventBus';
 import {ThingyDataEvent} from '../service/ThingyNotifyEventDispatchers';
 import {MqttConnectionEvent} from '../service/MqttConnection';
 import {ISimpleEventHandler} from 'strongly-typed-events';
-import {AlarmEvent} from "../service/AlarmService";
-
+import {AlarmEvent} from '../service/AlarmService';
 
 export enum DataType {
     CO2, Temperature, Pressure, Humidity, Mqtt, Alarm,
@@ -19,11 +18,11 @@ export class WebsocketController {
     private thingyQueryService: ThingyQueryService;
     private eventbus: EventBus;
     private lastMqttEvent: MqttConnectionEvent;
-    private handlers: Map<WebSocket, Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent>>>;
+    private handlers: Map<WebSocket, Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent | AlarmEvent>>>;
 
     constructor(server: Server, thingyQueryService: ThingyQueryService, eventbus: EventBus) {
         this.thingyQueryService = thingyQueryService;
-        this.handlers = new Map<WebSocket, Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent>>>();
+        this.handlers = new Map<WebSocket, Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent | AlarmEvent>>>();
         this.eventbus = eventbus;
         this.server = new WebSocket.Server({server});
         this.eventbus.subscribeToMqtt(event => this.lastMqttEvent = event);
@@ -31,7 +30,7 @@ export class WebsocketController {
     }
 
     private async onConnection(socket: WebSocket) {
-        this.handlers.set(socket, new Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent>>());
+        this.handlers.set(socket, new Map<[string, DataType], ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent | AlarmEvent>>());
         socket.on('message', this.onMessage(socket).bind(this));
         socket.on('close', this.onClose(socket).bind(this));
         if (this.lastMqttEvent) {
@@ -85,14 +84,14 @@ export class WebsocketController {
                 this.eventbus.subscribeToPressure(this.createAndRegisterHandler(socket, DataType.Pressure, thingyId), thingyId);
                 this.eventbus.subscribeToHumidity(this.createAndRegisterHandler(socket, DataType.Humidity, thingyId), thingyId);
                 this.eventbus.subscribeToMqtt(this.createAndRegisterHandler(socket, DataType.Mqtt, thingyId));
-                this.eventbus.subscribeToAlarm(this.createAndRegisterHandler(socket, DataType.Alarm, thingyId));
             }
+            this.eventbus.subscribeToAlarm(this.createAndRegisterHandler(socket, DataType.Alarm));
         };
     }
 
-    private createAndRegisterHandler(websocket: WebSocket, property: DataType, thingyId: string) {
-        let handlers = this.handlers.get(websocket);
-        let handler: ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent | AlarmEvent> = async (data: ThingyDataEvent | MqttConnectionEvent | AlarmEvent) => {
+    private createAndRegisterHandler(websocket: WebSocket, property: DataType, thingyId?: string) {
+        const handlers = this.handlers.get(websocket);
+        const handler: ISimpleEventHandler<ThingyDataEvent | MqttConnectionEvent | AlarmEvent> = async (data: ThingyDataEvent | MqttConnectionEvent | AlarmEvent) => {
             websocket.send(JSON.stringify({
                 property: property,
                 ...data

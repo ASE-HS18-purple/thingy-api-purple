@@ -5,10 +5,10 @@ import {
     PressureEvent,
     TemperatureEvent,
     ThingyDataEvent,
-    ThingyNotifyEventDispatchers
+    ThingyNotifyEventDispatchers,
 } from './ThingyNotifyEventDispatchers';
 import {MqttConnectionEvent} from './MqttConnection';
-import {AlarmActive, AlarmEvent} from "./AlarmService";
+import {AlarmActive, AlarmEvent} from './AlarmService';
 
 export class EventBus {
 

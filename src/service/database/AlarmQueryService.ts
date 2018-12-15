@@ -13,7 +13,7 @@ export class AlarmQueryService {
     }
 
     public async getAllAlarms(username: string): Promise<IAlarm[]> {
-        return await Alarm.find({username: username});
+        return await Alarm.find({username: username}, null, {sort: {triggerTime: -1}});
     }
 
     public async updateAlarm(alarm: IAlarm) {

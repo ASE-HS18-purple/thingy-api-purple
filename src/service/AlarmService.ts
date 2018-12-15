@@ -1,8 +1,7 @@
 import {AlarmQueryService} from './database/AlarmQueryService';
 import {IAlarm} from '../models/Alarm';
-import {IThingy} from "../models/Thingy";
-import Timer = NodeJS.Timer;
-import {EventBus} from "./EventBus";
+import {EventBus} from './EventBus';
+import {MqttService} from "./MqttService";
 
 export enum AlarmActive {
     ON = 'ON',
