@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 
 interface IThingy extends mongoose.Document {
+    id: string,
     name: string,
     username: string,
     deviceId: string,
