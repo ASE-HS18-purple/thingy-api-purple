@@ -25,7 +25,7 @@ export class AlarmController extends BaseController {
         const configuredAlarm = await this.alarmService.configureAlarm(alarm, username);
         ctx.response.body = configuredAlarm;
         ctx.response.status = configuredAlarm ? 200 : 400;
-    }
+    };
 
     private getAllAlarms = async (ctx: Router.IRouterContext) => {
         const username = ctx.state.user.user.username;
