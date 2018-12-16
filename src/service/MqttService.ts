@@ -35,7 +35,7 @@ export class MqttService {
     private environmentalDataQueryService: EnvironmentalDataQueryService;
     private eventBus: EventBus;
     private thingyIdByDeviceIds: Map<string, string>;
-    private speakerModeSet: string[] = [];
+    private speakerModeSet: Set<string> = new Set<string>();
 
     constructor(mqttBrokerClient: MqttConnection, thingyQuerier: ThingyQueryService, environmentalDataQueryService: EnvironmentalDataQueryService, environmentalDataParser: EnvironmentalDataParserService, eventBus: EventBus) {
         this.mqttConnection = mqttBrokerClient;
@@ -80,7 +80,8 @@ export class MqttService {
     }
 
     fireAlarm(alarmEvent: AlarmEvent) {
-        const callInterval = 1000;
+        const callInterval = 333;
+        const callLength = 10000;
         let lastCall = -callInterval;
         let t = timer((elapsed: number) => {
             if (elapsed - lastCall > callInterval) {
@@ -93,7 +94,7 @@ export class MqttService {
                     console.log('Noise on ' + deviceId);
                 }
             }
-            if (elapsed > 5000) {
+            if (elapsed > callLength) {
                 t.stop();
             }
         });
@@ -106,7 +107,7 @@ export class MqttService {
         let topic = `${deviceId}/${MqttService.soundService}/${MqttService.speakerMode}/write`;
         this.mqttConnection.client.publish(topic, data);
         console.log('Speaker mode set for thingy ' + deviceId);
-        this.speakerModeSet.push(deviceId);
+        this.speakerModeSet.add(deviceId);
     }
 
     private setEventHandlers = () => {
@@ -118,7 +119,7 @@ export class MqttService {
             let timestamp = new Date().getTime();
             if (service == 'connected') {
                 this.thingyConnected(cloudToken, message);
-            } else if(!this.speakerModeSet.includes(cloudToken)) {
+            } else if(!this.speakerModeSet.has(cloudToken)) {
                 // DEV!!!
                 this.setSpeakerMode(cloudToken);
             } else {
