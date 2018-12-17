@@ -6,6 +6,7 @@ import {ThingyDataEvent} from '../service/ThingyNotifyEventDispatchers';
 import {MqttConnectionEvent} from '../service/MqttConnection';
 import {ISimpleEventHandler} from 'strongly-typed-events';
 import {AlarmEvent} from '../service/AlarmService';
+import {IThingy, Thingy} from '../models/Thingy';
 
 export enum DataType {
     CO2, Temperature, Pressure, Humidity, Mqtt, Alarm,
@@ -26,6 +27,7 @@ export class WebsocketController {
         this.eventbus = eventbus;
         this.server = new WebSocket.Server({server});
         this.eventbus.subscribeToMqtt(event => this.lastMqttEvent = event);
+        this.eventbus.subscribeToConfigurationAdded(event => this.subscribeToThingy(event.thingy, event.username));
         this.server.on('connection', this.onConnection.bind(this));
     }
 
@@ -78,15 +80,20 @@ export class WebsocketController {
             const thingys = await this.thingyQueryService.findAllThingyDevicesByUsername(userName);
             this.sockets.set(userName, socket);
             for (let thingy of thingys) {
-                const thingyId = thingy.id;
-                this.eventbus.subscribeToAirQuality(this.createAndRegisterHandler(socket, DataType.CO2, thingyId), thingyId);
-                this.eventbus.subscribeToTemperature(this.createAndRegisterHandler(socket, DataType.Temperature, thingyId), thingyId);
-                this.eventbus.subscribeToPressure(this.createAndRegisterHandler(socket, DataType.Pressure, thingyId), thingyId);
-                this.eventbus.subscribeToHumidity(this.createAndRegisterHandler(socket, DataType.Humidity, thingyId), thingyId);
-                this.eventbus.subscribeToMqtt(this.createAndRegisterHandler(socket, DataType.Mqtt, thingyId));
+                this.subscribeToThingy(thingy, userName);
             }
             this.eventbus.subscribeToAlarm(this.createAndRegisterHandler(socket, DataType.Alarm));
         };
+    }
+
+    private subscribeToThingy(thingy: IThingy, username: string) {
+        const socket = this.sockets.get(username);
+        const thingyId = thingy.id;
+        this.eventbus.subscribeToAirQuality(this.createAndRegisterHandler(socket, DataType.CO2, thingyId), thingyId);
+        this.eventbus.subscribeToTemperature(this.createAndRegisterHandler(socket, DataType.Temperature, thingyId), thingyId);
+        this.eventbus.subscribeToPressure(this.createAndRegisterHandler(socket, DataType.Pressure, thingyId), thingyId);
+        this.eventbus.subscribeToHumidity(this.createAndRegisterHandler(socket, DataType.Humidity, thingyId), thingyId);
+        this.eventbus.subscribeToMqtt(this.createAndRegisterHandler(socket, DataType.Mqtt, thingyId));
     }
 
     private createAndRegisterHandler(websocket: WebSocket, property: DataType, thingyId?: string) {

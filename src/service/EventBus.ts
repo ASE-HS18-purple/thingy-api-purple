@@ -8,7 +8,7 @@ import {
     ThingyNotifyEventDispatchers,
 } from './ThingyNotifyEventDispatchers';
 import {MqttConnectionEvent} from './MqttConnection';
-import {AlarmActive, AlarmEvent} from './AlarmService';
+import {AlarmActive, AlarmEvent, ButtonPressed, ConfigurationAdded} from './AlarmService';
 
 export class EventBus {
 
@@ -16,6 +16,8 @@ export class EventBus {
     private allThingyEvents: ThingyNotifyEventDispatchers = new ThingyNotifyEventDispatchers();
     private mqttEventDispatcher: SimpleEventDispatcher<MqttConnectionEvent> = new SimpleEventDispatcher<MqttConnectionEvent>();
     private alarmEventDispatcher: SimpleEventDispatcher<AlarmEvent> = new SimpleEventDispatcher<AlarmEvent>();
+    private buttonPressedDispatcher: SimpleEventDispatcher<ButtonPressed> = new SimpleEventDispatcher<ButtonPressed>();
+    private configurationAddedDispatcher: SimpleEventDispatcher<ConfigurationAdded> = new SimpleEventDispatcher<ConfigurationAdded>();
 
     private createThingyEventsIfNotExisting(thingyId: string) {
         if (!this.specificThingyEvents.has(thingyId)) {
@@ -125,6 +127,30 @@ export class EventBus {
 
     public unsubscribeToAlarm(handler: ISimpleEventHandler<AlarmEvent>) {
         this.alarmEventDispatcher.unsubscribe(handler);
+    }
+
+    public fireButtonPressed(buttonEvent: ButtonPressed) {
+        this.buttonPressedDispatcher.dispatchAsync(buttonEvent);
+    }
+
+    public subscribeToButtonPressed(handler: ISimpleEventHandler<ButtonPressed>) {
+        this.buttonPressedDispatcher.subscribe(handler);
+    }
+
+    public unsubscribeButtonPressed(handler: ISimpleEventHandler<ButtonPressed>) {
+        this.buttonPressedDispatcher.unsubscribe(handler);
+    }
+
+    public fireConfigurationAdded(configurationAdded: ConfigurationAdded) {
+        this.configurationAddedDispatcher.dispatchAsync(configurationAdded);
+    }
+
+    public subscribeToConfigurationAdded(handler: ISimpleEventHandler<ConfigurationAdded>) {
+        this.configurationAddedDispatcher.subscribe(handler);
+    }
+
+    public unsubscribeConfigurationAdded(handler: ISimpleEventHandler<ConfigurationAdded>) {
+        this.configurationAddedDispatcher.unsubscribe(handler);
     }
 
 }

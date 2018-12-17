@@ -4,6 +4,8 @@ import {ThingyQueryService} from '../service/database/ThingyQueryService';
 import {ThingyService} from '../service/ThingyService';
 import {IThingy} from '../models/Thingy';
 import {MqttService} from '../service/MqttService';
+import {EventBus} from '../service/EventBus';
+import {ConfigurationAdded} from '../service/AlarmService';
 
 export class ThingyController extends BaseController {
 
@@ -11,12 +13,14 @@ export class ThingyController extends BaseController {
     private thingyService: ThingyService;
     private mqttService: MqttService;
     protected zone: string = '/thingy';
+    private eventbus: EventBus;
 
-    constructor(thingyQuerier: ThingyQueryService, thingyService: ThingyService, mqttService: MqttService) {
+    constructor(thingyQuerier: ThingyQueryService, thingyService: ThingyService, mqttService: MqttService, eventbus: EventBus) {
         super();
         this.thingyQuerier = thingyQuerier;
         this.thingyService = thingyService;
         this.mqttService = mqttService;
+        this.eventbus = eventbus;
     }
 
     getRoutes(router: Router): Router {
@@ -32,6 +36,7 @@ export class ThingyController extends BaseController {
         const thingyModel = <IThingy> ctx.request.body;
         const username = ctx.state.user.user.username;
         const configuredThingyDevice = await this.thingyService.configureNewThingyDevice(thingyModel, username);
+        this.eventbus.fireConfigurationAdded(new ConfigurationAdded(configuredThingyDevice, username));
         ctx.response.status = configuredThingyDevice ? 200 : 400;
         ctx.response.body = configuredThingyDevice;
     };

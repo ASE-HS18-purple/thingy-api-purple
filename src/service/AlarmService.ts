@@ -2,6 +2,7 @@ import {AlarmQueryService} from './database/AlarmQueryService';
 import {IAlarm} from '../models/Alarm';
 import {EventBus} from './EventBus';
 import {MqttService} from "./MqttService";
+import {IThingy} from '../models/Thingy';
 
 export enum AlarmActive {
     ON = 'ON',
@@ -13,6 +14,16 @@ export class AlarmEvent {
     }
 }
 
+export class ButtonPressed {
+    constructor(public thingyId: string) {
+    }
+}
+
+export class ConfigurationAdded {
+    constructor(public thingy: IThingy, public username: string) {
+    }
+}
+
 export class AlarmService {
 
     private alarmQueryService: AlarmQueryService;
@@ -21,6 +32,7 @@ export class AlarmService {
     constructor(alarmQueryService: AlarmQueryService, eventBus: EventBus) {
         this.alarmQueryService = alarmQueryService;
         this.eventBus = eventBus;
+        this.eventBus.subscribeToButtonPressed(event => this.stopAllAlarms(event));
     }
 
     public async configureAlarm(alarm: IAlarm, username: string) {
@@ -28,7 +40,7 @@ export class AlarmService {
             // The alarm cannot be triggered and is not on as soon as it is created.
             alarm.triggered = false;
             alarm.isOn = false;
-            if (this.checkIfAlarmIsInFutureAtLeast5Seconds(alarm)) {
+            if (this.checkIfAlarmIsInFutureAtLeast5MilliSeconds(alarm)) {
                 const createdAlarm: IAlarm = await this.alarmQueryService.createAlarm(alarm, username);
                 this.createTimer(createdAlarm);
                 return createdAlarm;
@@ -36,7 +48,15 @@ export class AlarmService {
         }
     }
 
-    public async getAllAlarms(username: string) {
+    public async stopAllAlarms(buttonPressed: ButtonPressed) {
+        const allAlarms = await this.alarmQueryService.getAllAlarmsAllUsers();
+        for (let alarm of allAlarms) {
+            alarm.isOn = false;
+            alarm.save();
+        }
+    }
+
+    public async getAllAlarms(username: string): Promise<IAlarm[]> {
         return await this.alarmQueryService.getAllAlarms(username);
     }
 
@@ -47,7 +67,7 @@ export class AlarmService {
         setTimeout(this.sendDataToClientToTriggerAlarm, millis, alarm, this.alarmQueryService, this.eventBus);
     }
 
-    private checkIfAlarmIsInFutureAtLeast5Seconds(alarm: IAlarm): boolean {
+    private checkIfAlarmIsInFutureAtLeast5MilliSeconds(alarm: IAlarm): boolean {
         const triggerTime = alarm.triggerTime;
         const now = new Date().getTime();
         return triggerTime - now > 5;
