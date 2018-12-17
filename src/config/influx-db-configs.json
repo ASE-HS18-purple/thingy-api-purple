@@ -1,4 +1,4 @@
 {
-  "DATABASE_URL":"localhost",
+  "DATABASE_URL":"influx",
   "DATABASE_NAME":"ase-hs18"
 }

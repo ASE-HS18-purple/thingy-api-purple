@@ -1,13 +1,48 @@
 import {IThingy, Thingy} from '../../models/Thingy';
-import {ThingyService} from '../ThingyService';
+import {EnvironmentalDataQueryService} from "./EnvironmentalDataQueryService";
+import {DataType} from "../../controllers/WebsocketController";
 
 
 export class ThingyQueryService {
 
+    private envDataQuery: EnvironmentalDataQueryService;
+
+    constructor(envDataQuery: EnvironmentalDataQueryService) {
+        this.envDataQuery = envDataQuery;
+    }
+
     public async findAllThingyDevicesByUsername(username: string): Promise<IThingy[]> {
-        return await Thingy.find({
+        const thingyDevices = await Thingy.find({
             username: username,
         });
+        if (thingyDevices) {
+            for (const thingyDevice of thingyDevices) {
+                thingyDevice.lastValues = new Map<number, number>();
+                thingyDevice.lastTimes = new Map<number, number>();
+                const temp = await this.envDataQuery.getTemperatureLastStoredProperty(thingyDevice._id);
+                // Note: We are querying here only the last item stored. Hence we check and deal with only one element.
+                if (temp[0]) {
+                    thingyDevice.lastValues[DataType.Temperature] = (temp[0] as any).value;
+                    thingyDevice.lastTimes[DataType.Temperature] = new Date((temp[0] as any).time).getTime();
+                }
+                const humidity = await this.envDataQuery.getHumidityLastStoredProperty(thingyDevice._id);
+                if (humidity[0]) {
+                    thingyDevice.lastValues[DataType.Humidity] = (humidity[0] as any).value;
+                    thingyDevice.lastTimes[DataType.Humidity] = new Date((humidity[0] as any).time).getTime();
+                }
+                const pressure = await this.envDataQuery.getPressureLastStoredProperty(thingyDevice._id);
+                if (pressure[0]) {
+                    thingyDevice.lastValues[DataType.Pressure] = (pressure[0] as any).value;
+                    thingyDevice.lastTimes[DataType.Pressure] = new Date((pressure[0] as any).time).getTime();
+                }
+                const co2 = await this.envDataQuery.getCo2LastStoredProperty(thingyDevice._id);
+                if (co2[0]) {
+                    thingyDevice.lastValues[DataType.CO2] = (co2[0] as any).value;
+                    thingyDevice.lastTimes[DataType.CO2] = new Date((co2[0] as any).time).getTime();
+                }
+            }
+        }
+        return thingyDevices;
     }
 
     public async findAllThingyDevices(): Promise<IThingy[]> {
