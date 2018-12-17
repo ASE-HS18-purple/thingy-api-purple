@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 
 interface IAlarm extends mongoose.Document {
+    id: string;
     name: string;
     username: string;
     triggered: boolean;

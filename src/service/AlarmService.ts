@@ -52,7 +52,7 @@ export class AlarmService {
         const allAlarms = await this.alarmQueryService.getAllAlarmsAllUsers();
         for (let alarm of allAlarms) {
             alarm.isOn = false;
-            alarm.save();
+            await this.alarmQueryService.updateAlarm(alarm);
         }
     }
 
@@ -77,7 +77,7 @@ export class AlarmService {
         alarm.isOn = true;
         alarm.triggered = true;
         await alarmQueryService.updateAlarm(alarm);
-        const alarmEvent: AlarmEvent = new AlarmEvent(alarm._id, AlarmActive.ON);
+        const alarmEvent: AlarmEvent = new AlarmEvent(alarm.id, AlarmActive.ON);
         eventBus.fireAlarmEvent(alarmEvent);
     }
 

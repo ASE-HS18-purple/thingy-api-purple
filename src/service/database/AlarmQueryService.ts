@@ -17,10 +17,11 @@ export class AlarmQueryService {
     }
 
     public async getAllAlarmsAllUsers(): Promise<IAlarm[]> {
-        return await Alarm.find();
+        return await Alarm.find({});
     }
 
     public async updateAlarm(alarm: IAlarm) {
         return await Alarm.updateOne({_id: alarm.id}, alarm);
     }
+
 }

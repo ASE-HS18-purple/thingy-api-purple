@@ -39,7 +39,7 @@ export class MqttService {
     private environmentalDataQueryService: EnvironmentalDataQueryService;
     private eventBus: EventBus;
     private thingyIdByDeviceIds: Map<string, string>;
-    private speakerModeSet: Set<string> = new Set<string>();
+    private speakerModeSet: string [] = [];
     private buttonTriggered: boolean;
 
     constructor(mqttBrokerClient: MqttConnection, thingyQuerier: ThingyQueryService, environmentalDataQueryService: EnvironmentalDataQueryService, environmentalDataParser: EnvironmentalDataParserService, eventBus: EventBus) {
@@ -149,7 +149,9 @@ export class MqttService {
         let topic = `${deviceId}/${MqttService.soundService}/${MqttService.speakerMode}/write`;
         this.mqttConnection.client.publish(topic, data);
         console.log('Speaker mode set for thingy ' + deviceId);
-        this.speakerModeSet.add(deviceId);
+        if (!this.speakerModeSet.includes(deviceId)) {
+            this.speakerModeSet.push(deviceId);
+        }
     }
 
     private setEventHandlers = () => {
